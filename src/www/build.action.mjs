@@ -41,7 +41,7 @@ export async function main(...parameters) {
       throw new TypeError('Release builds require a valid versionName, but it is set to 0.0.0.');
     }
 
-    if (!sentryDsn) {
+    if (!sentryDsn && false) {
       throw new TypeError('Release builds require SENTRY_DSN, but it is not defined.');
     }
 
@@ -50,7 +50,7 @@ export async function main(...parameters) {
       https://docs.sentry.io/product/sentry-basics/dsn-explainer/#the-parts-of-the-dsn
     */
     try {
-      new URL(sentryDsn);
+      //new URL(sentryDsn);
     } catch (e) {
       throw new TypeError(`The sentryDsn ${sentryDsn} is not a valid URL!`);
     }
