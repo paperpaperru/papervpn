@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tun2socks
+package xrayMobile
 
 import (
 	"runtime/debug"
 
-	"github.com/Jigsaw-Code/outline-client/src/tun2socks/outline/shadowsocks"
 	"github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel"
 	"github.com/eycorsican/go-tun2socks/common/log"
 )
@@ -40,15 +39,15 @@ func init() {
 //
 // Returns an error if the TUN file descriptor cannot be opened, or if the tunnel fails to
 // connect.
-func ConnectShadowsocksTunnel(fd int, client *shadowsocks.Client, isUDPEnabled bool) (tunnel.UpdatableUDPSupportTunnel, error) {
+func ConnectLocalSocksTunnel(fd int) (tunnel.UpdatableUDPSupportTunnel, error) {
 	tun, err := tunnel.MakeTunFile(fd)
 	if err != nil {
 		return nil, err
 	}
-	t, err := newTunnel(client, client, isUDPEnabled, tun)
+	t, err := newTunnel(tun)
 	if err != nil {
 		return nil, err
 	}
 	go tunnel.ProcessInputPackets(t, tun)
-	return t, nil
+	return &localSocksTunnel{t}, nil
 }

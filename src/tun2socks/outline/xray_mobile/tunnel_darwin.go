@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tun2socks
+package xrayMobile
 
 import (
 	"errors"
+	"github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel"
+	"github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel_darwin"
 	"runtime/debug"
 	"time"
-
-  "github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel"
-  "github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel_darwin"
-
-	"github.com/Jigsaw-Code/outline-client/src/tun2socks/outline/shadowsocks"
 )
 
 func init() {
@@ -39,19 +36,16 @@ func init() {
 	}()
 }
 
-// ConnectShadowsocksTunnel reads packets from a TUN device and routes it to a Shadowsocks proxy server.
-// Returns an OutlineTunnel instance that should be used to input packets to the tunnel.
-//
-// `tunWriter` is used to output packets to the TUN (VPN).
-// `client` is the Shadowsocks client (created by [shadowsocks.NewClient]).
-// `isUDPEnabled` indicates whether the tunnel and/or network enable UDP proxying.
-//
-// Sets an error if the tunnel fails to connect.
-func ConnectShadowsocksTunnel(tunWriter tunnelDarwin.TunWriter, client *shadowsocks.Client, isUDPEnabled bool) (tunnel.UpdatableUDPSupportTunnel, error) {
+// ConnectLocalSocksTunnel reads packets from a TUN device and routes it to a local socks proxy server.
+// Returns a Tunnel instance that should be used to input packets to the tunnel.
+
+func ConnectLocalSocksTunnel(tunWriter tunnelDarwin.TunWriter) (tunnel.UpdatableUDPSupportTunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("must provide a TunWriter")
-	} else if client == nil {
-		return nil, errors.New("must provide a client")
 	}
-	return newTunnel(client, client, isUDPEnabled, tunWriter)
+	t, err := newTunnel(tunWriter)
+	if err != nil {
+		return nil, err
+	}
+	return &localSocksTunnel{t}, nil
 }
