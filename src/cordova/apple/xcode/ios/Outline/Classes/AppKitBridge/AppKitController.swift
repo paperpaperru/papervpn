@@ -17,7 +17,7 @@ import ServiceManagement
 
 class AppKitController: NSObject {
     private var statusItemController: StatusItemController?
-    static let kAppGroup = "QT8Z3Q9V3A.org.outline.macos.client"
+    static let kAppGroup = "PZ6PPU9KKM.io.paperpaper.xray.macos.client"
     static let kAppLauncherName = "launcher3"
 
     override public required init() {

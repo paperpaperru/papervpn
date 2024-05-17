@@ -10,7 +10,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>$(TeamIdentifierPrefix)org.outline.macos.client</string>
+		<string>$(TeamIdentifierPrefix)io.paperpaper.xray.macos.client</string>
 	</array>
 	<key>com.apple.security.network.client</key>
 	<true/>
