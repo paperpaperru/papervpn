@@ -25,8 +25,9 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import tun2socks.Tunnel;
+import tunnel.UpdatableUDPSupportTunnel;
 import tun2socks.Tun2socks;
+import xrayMobile.XrayMobile;
 
 
 /**
@@ -46,7 +47,7 @@ public class VpnTunnel {
   private final VpnTunnelService vpnService;
   private String dnsResolverAddress;
   private ParcelFileDescriptor tunFd;
-  private Tunnel tunnel;
+  private UpdatableUDPSupportTunnel tunnel;
 
   /**
    * Constructor.
@@ -141,7 +142,11 @@ public class VpnTunnel {
     }
 
     LOG.fine("Starting tun2socks...");
-    tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
+    //tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
+    String s = XrayMobile.startXrayServer(
+            this.vpnService.getFilesDir().getAbsolutePath(), "", 0, "");
+    LOG.info(String.format("XrayMobile.startXrayServer %s", s));
+    tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd());
   }
 
   /* Disconnects a tunnel created by a previous call to |connectTunnel|. */
