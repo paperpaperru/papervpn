@@ -147,10 +147,6 @@ public class VpnTunnel {
 
     LOG.fine("Starting tun2socks...");
     tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
-    String s = XrayMobile.startXrayServer(
-            this.vpnService.getFilesDir().getAbsolutePath(), "", 0, "");
-    LOG.info(String.format("XrayMobile.startXrayServer %s", s));
-    tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd());
   }
 
   public synchronized void connectXrayTunnel(
