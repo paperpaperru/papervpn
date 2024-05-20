@@ -261,7 +261,7 @@ public class VpnTunnelService extends VpnService {
       stopForeground();
       try {
         // Disconnect the tunnel; do not tear down the VPN to avoid leaking traffic.
-        vpnTunnel.disconnectTunnel();
+        vpnTunnel.disconnectShadowsocksTunnel();
       } catch (Exception e) {
         LOG.log(Level.SEVERE, "Failed to disconnect tunnel", e);
       }
@@ -273,31 +273,37 @@ public class VpnTunnelService extends VpnService {
     configCopy.setCipherName(config.proxy.method);
     configCopy.setPassword(config.proxy.password);
     configCopy.setPrefix(config.proxy.prefix);
-    final shadowsocks.Client client;
-    try {
-      client = new shadowsocks.Client(configCopy);
-    } catch (Exception e) {
-      LOG.log(Level.WARNING, "Invalid configuration", e);
-      tearDownActiveTunnel();
-      return ErrorCode.ILLEGAL_SERVER_CONFIGURATION;
-    }
 
+    final shadowsocks.Client client;
     ErrorCode errorCode = ErrorCode.NO_ERROR;
-    if (!isAutoStart) {
+    if ( !configCopy.getCipherName().equals("aes-128-gcm") ) {
       try {
-        // Do not perform connectivity checks when connecting on startup. We should avoid failing
-        // the connection due to a network error, as network may not be ready.
-        errorCode = checkServerConnectivity(client);
-        if (!(errorCode == ErrorCode.NO_ERROR
-                || errorCode == ErrorCode.UDP_RELAY_NOT_ENABLED)) {
-          tearDownActiveTunnel();
-          return errorCode;
-        }
+        client = new shadowsocks.Client(configCopy);
       } catch (Exception e) {
+        LOG.log(Level.WARNING, "Invalid configuration", e);
         tearDownActiveTunnel();
-        return ErrorCode.SHADOWSOCKS_START_FAILURE;
+        return ErrorCode.ILLEGAL_SERVER_CONFIGURATION;
+      }
+      if (!isAutoStart) {
+        try {
+          // Do not perform connectivity checks when connecting on startup. We should avoid failing
+          // the connection due to a network error, as network may not be ready.
+          errorCode = checkServerConnectivity(client);
+          if (!(errorCode == ErrorCode.NO_ERROR
+                  || errorCode == ErrorCode.UDP_RELAY_NOT_ENABLED)) {
+            tearDownActiveTunnel();
+            return errorCode;
+          }
+        } catch (Exception e) {
+          tearDownActiveTunnel();
+          return ErrorCode.SHADOWSOCKS_START_FAILURE;
+        }
       }
     }
+    else {
+      client = null;
+    }
+
     tunnelConfig = config;
 
     if (!isRestart) {
@@ -313,7 +319,13 @@ public class VpnTunnelService extends VpnService {
     final boolean remoteUdpForwardingEnabled =
         isAutoStart ? tunnelStore.isUdpSupported() : errorCode == ErrorCode.NO_ERROR;
     try {
-      vpnTunnel.connectTunnel(client, remoteUdpForwardingEnabled);
+      if ( !tunnelConfig.proxy.method.equals("aes-128-gcm")) {
+        vpnTunnel.connectShadowsocksTunnel(client, remoteUdpForwardingEnabled);
+      }
+      else {
+        vpnTunnel.connectXrayTunnel(
+                tunnelConfig.proxy.host, tunnelConfig.proxy.port, tunnelConfig.proxy.password);
+      }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to connect the tunnel", e);
       tearDownActiveTunnel();
@@ -359,7 +371,12 @@ public class VpnTunnelService extends VpnService {
 
   /* Helper method that stops Shadowsocks, tun2socks, and tears down the VPN. */
   private void stopVpnTunnel() {
-    vpnTunnel.disconnectTunnel();
+    if ( tunnelConfig != null ) {
+      if (!tunnelConfig.proxy.method.equals("aes-128-gcm"))
+        vpnTunnel.disconnectShadowsocksTunnel();
+      else
+        vpnTunnel.disconnectXrayTunnel();
+    }
     vpnTunnel.tearDownVpn();
   }
 

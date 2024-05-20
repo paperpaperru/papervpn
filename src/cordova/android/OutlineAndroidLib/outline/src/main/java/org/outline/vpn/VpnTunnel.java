@@ -26,8 +26,8 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import tunnel.UpdatableUDPSupportTunnel;
-import tun2socks.Tun2socks;
 import xrayMobile.XrayMobile;
+import tun2socks.Tun2socks;
 
 
 /**
@@ -119,6 +119,15 @@ public class VpnTunnel {
     }
   }
 
+  private void checkTunnelIsReadyToConnect() {
+    if (tunFd == null) {
+      throw new IllegalStateException("Must establish the VPN before connecting the tunnel.");
+    }
+    if (isTunnelConnected()) {
+      throw new IllegalStateException("Tunnel already connected");
+    }
+  }
+
   /**
    * Connects a tunnel between a Shadowsocks proxy server and the VPN TUN interface.
    *
@@ -129,34 +138,54 @@ public class VpnTunnel {
    *     connected.
    * @throws Exception when the tunnel fails to connect.
    */
-  public synchronized void connectTunnel(final shadowsocks.Client client, boolean isUdpEnabled) throws Exception {
-    LOG.info("Connecting the tunnel.");
+  public synchronized void connectShadowsocksTunnel(final shadowsocks.Client client, boolean isUdpEnabled) throws Exception {
+    this.checkTunnelIsReadyToConnect();
+    LOG.info("Connecting the Shadowsocks tunnel.");
     if (client == null) {
       throw new IllegalArgumentException("Must provide a Shadowsocks client.");
     }
-    if (tunFd == null) {
-      throw new IllegalStateException("Must establish the VPN before connecting the tunnel.");
-    }
-    if (isTunnelConnected()) {
-      throw new IllegalStateException("Tunnel already connected");
-    }
 
     LOG.fine("Starting tun2socks...");
-    //tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
+    tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
     String s = XrayMobile.startXrayServer(
             this.vpnService.getFilesDir().getAbsolutePath(), "", 0, "");
     LOG.info(String.format("XrayMobile.startXrayServer %s", s));
     tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd());
   }
 
-  /* Disconnects a tunnel created by a previous call to |connectTunnel|. */
-  public synchronized void disconnectTunnel() {
+  public synchronized void connectXrayTunnel(
+          String host, int port, String uuid) throws Exception {
+    this.checkTunnelIsReadyToConnect();
+    LOG.info("Connecting the Xray tunnel.");
+
+    LOG.fine("Starting Xray...");
+    String s = XrayMobile.startXrayServer(
+            this.vpnService.getFilesDir().getAbsolutePath(), host, port, uuid);
+    LOG.info(String.format("XrayMobile.startXrayServer %s", s));
+    LOG.fine("Starting local tun2socks...");
+    tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd());
+  }
+
+  private boolean disconnectTunnel() {
     LOG.info("Disconnecting the tunnel.");
     if (!isTunnelConnected()) {
-      return;
+      return false;
     }
     tunnel.disconnect();
     tunnel = null;
+
+    return true;
+  }
+  /* Disconnects a tunnel created by a previous call to |connectTunnel|. */
+  public synchronized void disconnectShadowsocksTunnel() {
+    LOG.info("Disconnecting the Shadowsocks tunnel.");
+    disconnectTunnel();
+  }
+
+  public synchronized void disconnectXrayTunnel() {
+    LOG.info("Disconnecting the Xray tunnel.");
+    if ( disconnectTunnel() )
+      XrayMobile.stopXrayServer();
   }
 
   /**
