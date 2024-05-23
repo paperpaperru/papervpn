@@ -106,9 +106,9 @@ export class OutlineServer implements Server {
 
     try {
       if (this.xraySessionConfig) {
-        await this.tunnel.start(this.xraySessionConfig, true);
+        await this.tunnel.start(this.xraySessionConfig, 'xray');
       } else {
-      await this.tunnel.start(this.shadowsocksSessionConfig, false);
+        await this.tunnel.start(this.shadowsocksSessionConfig, 'ss');
       }
     } catch (cause) {
       // e originates in "native" code: either Cordova or Electron's main process.

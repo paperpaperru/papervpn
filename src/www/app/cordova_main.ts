@@ -84,11 +84,11 @@ class CordovaErrorReporter extends SentryErrorReporter {
 class CordovaTunnel implements Tunnel {
   constructor(public id: string) {}
 
-  start(config: ShadowsocksSessionConfig | XraySessionConfig, isXray: boolean) {
+  start(config: ShadowsocksSessionConfig | XraySessionConfig, tunnelType: string) {
     if (!config) {
       throw new errors.IllegalServerConfiguration();
     }
-    if (isXray) {
+    if (tunnelType === 'xray') {
       return pluginExecWithErrorCode<void>('start', this.id, 'xray', config);
     }
     return pluginExecWithErrorCode<void>('start', this.id, 'ss', config);
