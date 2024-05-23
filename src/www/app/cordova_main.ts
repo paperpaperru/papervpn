@@ -34,7 +34,7 @@ import {Tunnel, TunnelStatus} from './tunnel';
 import {AbstractUpdater} from './updater';
 import * as interceptors from './url_interceptor';
 import {FakeOutlineTunnel} from './fake_tunnel';
-import {ShadowsocksSessionConfig} from './tunnel';
+import {ShadowsocksSessionConfig, XraySessionConfig} from './tunnel';
 import {NoOpVpnInstaller, VpnInstaller} from './vpn_installer';
 
 const OUTLINE_PLUGIN_NAME = 'OutlinePlugin';
@@ -63,6 +63,10 @@ async function pluginExecWithErrorCode<T>(cmd: string, ...args: unknown[]): Prom
   }
 }
 
+function isXraySessionConfig(config: ShadowsocksSessionConfig | XraySessionConfig): config is XraySessionConfig {
+  return (config as XraySessionConfig).xrayConfig !== undefined;
+}
+
 // Adds reports from the (native) Cordova plugin.
 class CordovaErrorReporter extends SentryErrorReporter {
   constructor(appVersion: string, dsn: string, tags: Tags) {
@@ -84,9 +88,12 @@ class CordovaErrorReporter extends SentryErrorReporter {
 class CordovaTunnel implements Tunnel {
   constructor(public id: string) {}
 
-  start(config: ShadowsocksSessionConfig) {
+  start(config: ShadowsocksSessionConfig | XraySessionConfig) {
     if (!config) {
       throw new errors.IllegalServerConfiguration();
+    }
+    if (isXraySessionConfig(config)) {
+      return pluginExecWithErrorCode<void>('startXray', this.id, config);
     }
     return pluginExecWithErrorCode<void>('start', this.id, config);
   }
