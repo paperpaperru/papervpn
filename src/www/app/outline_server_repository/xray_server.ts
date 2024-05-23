@@ -70,7 +70,7 @@ export class XrayOutlineServer extends OutlineServer {
   async connect() {
       this.sessionConfig = await fetchXraySessionConfig(this.sessionConfigLocation);
       try {
-        await this.tunnel.start(this.sessionConfig, 'ss');
+        await this.tunnel.start(this.sessionConfig, 'xray');
       } catch (cause) {
       // e originates in "native" code: either Cordova or Electron's main process.
       // Because of this, we cannot assume "instanceof OutlinePluginError" will work.
