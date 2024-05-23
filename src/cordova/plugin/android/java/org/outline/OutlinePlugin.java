@@ -51,7 +51,6 @@ public class OutlinePlugin extends CordovaPlugin {
   // Actions supported by this plugin.
   public enum Action {
     START("start"),
-    START_XRAY("startXray"),
     STOP("stop"),
     ON_STATUS_CHANGE("onStatusChange"),
     IS_RUNNING("isRunning"),
@@ -195,10 +194,7 @@ public class OutlinePlugin extends CordovaPlugin {
           final JSONObject config = args.getJSONObject(1);
           int errorCode = startVpnTunnel(tunnelId, config);
           sendErrorCode(callback, errorCode);
-        } else if (Action.START_XRAY.is(action)) {
-          System.out.println("Starting Xray");
-        }
-          else if (Action.STOP.is(action)) {
+        } else if (Action.STOP.is(action)) {
           final String tunnelId = args.getString(0);
           LOG.info(String.format(Locale.ROOT, "Stopping VPN tunnel %s", tunnelId));
           int errorCode = vpnTunnelService.stopTunnel(tunnelId);

@@ -63,10 +63,6 @@ async function pluginExecWithErrorCode<T>(cmd: string, ...args: unknown[]): Prom
   }
 }
 
-function isXraySessionConfig(config: ShadowsocksSessionConfig | XraySessionConfig): config is XraySessionConfig {
-  return (config as XraySessionConfig).xrayConfig !== undefined;
-}
-
 // Adds reports from the (native) Cordova plugin.
 class CordovaErrorReporter extends SentryErrorReporter {
   constructor(appVersion: string, dsn: string, tags: Tags) {
@@ -88,14 +84,14 @@ class CordovaErrorReporter extends SentryErrorReporter {
 class CordovaTunnel implements Tunnel {
   constructor(public id: string) {}
 
-  start(config: ShadowsocksSessionConfig | XraySessionConfig) {
+  start(config: ShadowsocksSessionConfig | XraySessionConfig, isXray: boolean) {
     if (!config) {
       throw new errors.IllegalServerConfiguration();
     }
-    if (isXraySessionConfig(config)) {
-      return pluginExecWithErrorCode<void>('startXray', this.id, config);
+    if (isXray) {
+      return pluginExecWithErrorCode<void>('start', this.id, 'xray', config);
     }
-    return pluginExecWithErrorCode<void>('start', this.id, config);
+    return pluginExecWithErrorCode<void>('start', this.id, 'ss', config);
   }
 
   stop() {
