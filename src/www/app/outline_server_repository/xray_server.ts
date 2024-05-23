@@ -64,7 +64,7 @@ export class XrayOutlineServer extends OutlineServer {
   }
 
   get isOutlineServer() {
-    return this.accessKey.includes('outline=1');
+    return false
   }
 
   async connect() {

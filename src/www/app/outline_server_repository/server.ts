@@ -20,10 +20,7 @@ import {Tunnel, TunnelStatus} from '../tunnel';
 // PLEASE DON'T use this class outside of this `outline_server_repository` folder!
 
 export interface OutlineServer extends Server {
-  sessionConfigLocation: URL
-
-  isOutlineServer: boolean
-  isServerCipherSupported(cipher?: string): boolean
+  sessionConfigLocation?: URL
 }
 export abstract class OutlineServer implements Server {
   // We restrict to AEAD ciphers because unsafe ciphers are not supported in go-tun2socks.
