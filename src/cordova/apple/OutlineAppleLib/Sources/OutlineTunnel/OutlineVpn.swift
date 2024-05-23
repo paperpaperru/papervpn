@@ -44,6 +44,7 @@ public class OutlineVpn: NSObject {
     static let host = "host"
     static let port = "port"
     static let isOnDemand = "is-on-demand"
+    static let tunnelType = "tunnelType"
   }
 
   // This must be kept in sync with:
@@ -83,21 +84,21 @@ public class OutlineVpn: NSObject {
   // MARK: Interface
 
   // Starts a VPN tunnel as specified in the OutlineTunnel object.
-  public func start(_ tunnelId: String, configJson: [String: Any], _ completion: @escaping (Callback)) {
+  public func start(_ tunnelId: String, tunnelType: String, configJson: [String: Any], _ completion: @escaping (Callback)) {
     guard !isActive(tunnelId) else {
       return completion(ErrorCode.noError)
     }
     if isVpnConnected() {
-      return restartVpn(tunnelId, configJson: configJson, completion: completion)
+      return restartVpn(tunnelId, tunnelType: tunnelType, configJson: configJson, completion: completion)
     }
-    self.startVpn(tunnelId, configJson: configJson, isAutoConnect: false, completion)
+    self.startVpn(tunnelId, tunnelType: tunnelType, configJson: configJson, isAutoConnect: false, completion)
   }
 
   // Starts the last successful VPN tunnel.
   @objc public func startLastSuccessfulTunnel(_ completion: @escaping (Callback)) {
     // Explicitly pass an empty tunnel's configuration, so the VpnExtension process retrieves
     // the last configuration from disk.
-    self.startVpn(nil, configJson:nil, isAutoConnect: true, completion)
+    self.startVpn(nil, tunnelType:nil, configJson:nil, isAutoConnect: true, completion)
   }
 
   // Tears down the VPN if the tunnel with id |tunnelId| is active.
@@ -123,7 +124,7 @@ public class OutlineVpn: NSObject {
 
   // MARK: Helpers
 
-  private func startVpn(_ tunnelId: String?, configJson: [String: Any]?, isAutoConnect: Bool, _ completion: @escaping(Callback)) {
+  private func startVpn(_ tunnelId: String?, tunnelType: String?, configJson: [String: Any]?, isAutoConnect: Bool, _ completion: @escaping(Callback)) {
     setupVpn() { error in
       if error != nil {
         DDLogError("Failed to setup VPN: \(String(describing: error))")
@@ -138,6 +139,7 @@ public class OutlineVpn: NSObject {
         // TODO(fortuna): put this in a subkey
         tunnelOptions = configJson
         tunnelOptions?[MessageKey.tunnelId] = tunnelId
+        tunnelOptions?[MessageKey.tunnelType] = tunnelType
       } else {
         // macOS app was started by launcher.
         tunnelOptions = [MessageKey.isOnDemand: "true"];
@@ -160,12 +162,13 @@ public class OutlineVpn: NSObject {
   }
 
   // Sends message to extension to restart the tunnel without tearing down the VPN.
-  private func restartVpn(_ tunnelId: String, configJson: [String: Any],
+  private func restartVpn(_ tunnelId: String, tunnelType: String, configJson: [String: Any],
                           completion: @escaping(Callback)) {
     if activeTunnelId != nil {
       vpnStatusObserver?(.disconnected, activeTunnelId!)
     }
     let message = [MessageKey.action: Action.restart, MessageKey.tunnelId: tunnelId,
+                   MessageKey.tunnelType: tunnelType,
                    MessageKey.config: configJson] as [String : Any]
     self.sendVpnExtensionMessage(message) { response in
       self.onStartVpnExtensionMessage(response, completion: completion)

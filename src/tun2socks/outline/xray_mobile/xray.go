@@ -60,10 +60,10 @@ func writeConfig(configFile string, host string, port int, uuid string) error {
 	return os.WriteFile(configFile, config, 0644)
 }
 
-func StartXrayServer(configDir string, host string, port int, uuid string) string {
+func StartXrayServer(configDir string, config string) string {
 	geo := libXray.LoadGeoData(configDir)
 	configFile := configDir + "config.json"
-	e := writeConfig(configFile, host, port, uuid)
+	e := os.WriteFile(configFile, []byte(config), 0644)
 	if e != nil {
 		return fmt.Sprintf("writeConfig %s failed %s", configFile, e.Error())
 	}

@@ -84,12 +84,16 @@ class OutlinePlugin: CDVPlugin {
                              errorCode: OutlineVpn.ErrorCode.illegalServerConfiguration)
         }
         DDLogInfo("\(Action.start) \(tunnelId)")
+        guard let tunnelType = command.argument(at: 1) as? String else {
+            return sendError("Invalid configuration", callbackId: command.callbackId,
+                           errorCode: OutlineVpn.ErrorCode.illegalServerConfiguration)
+        }
         // TODO(fortuna): Move the config validation to the config parsing code in Go.
-        guard let configJson = command.argument(at: 1) as? [String: Any], containsExpectedKeys(configJson) else {
+        guard let configJson = command.argument(at: 2) as? [String: Any] else {
             return sendError("Invalid configuration", callbackId: command.callbackId,
                              errorCode: OutlineVpn.ErrorCode.illegalServerConfiguration)
         }
-        OutlineVpn.shared.start(tunnelId, configJson:configJson) { errorCode in
+        OutlineVpn.shared.start(tunnelId, tunnelType:tunnelType, configJson:configJson) { errorCode in
             if errorCode == OutlineVpn.ErrorCode.noError {
 #if os(macOS) || targetEnvironment(macCatalyst)
                 NotificationCenter.default.post(name: .kVpnConnected, object: nil)

@@ -115,7 +115,7 @@ NSString *const kDefaultPathKey = @"defaultPath";
   // still be unusable, but at least the user will have a visual indication that Outline is the
   // culprit and can explicitly disconnect.
   long errorCode = noError;
-  if (!isOnDemand && ![self.tunnelConfig.method isEqualToString:@"aes-128-gcm"]) {
+  if (!isOnDemand && [self.tunnelConfig.tunnelType isEqualToString:@"ss"]) {
     ShadowsocksClient* client = [self getClient];
     if (client == nil) {
       return completionHandler([NSError errorWithDomain:NEVPNErrorDomain
@@ -157,7 +157,7 @@ NSString *const kDefaultPathKey = @"defaultPath";
 - (void)stopTunnelWithReason:(NEProviderStopReason)reason
            completionHandler:(void (^)(void))completionHandler {
   DDLogInfo(@"Stopping tunnel");
-  if ([self.tunnelConfig.method isEqualToString:@"aes-128-gcm"]) {
+  if ([self.tunnelConfig.tunnelType isEqualToString:@"xray"]) {
     DDLogInfo(@"Stopping Xray");
     NSString* t = XrayMobileStopXrayServer();
     DDLogInfo(@"Xray stopped %@", t);
@@ -414,7 +414,7 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
   DDLogInfo(@"Configuration or host IP address changed with the network. Reconnecting tunnel.");
   self.hostNetworkAddress = activeHostNetworkAddress;
   long errorCode = noError;
-  if (![self.tunnelConfig.method isEqualToString:@"aes-128-gcm"]) {
+  if ([self.tunnelConfig.tunnelType isEqualToString:@"ss"]) {
     ShadowsocksClient* client = [self getClient];
     if (client == nil) {
       [self execAppCallbackForAction:kActionStart errorCode:illegalServerConfiguration];
@@ -487,23 +487,24 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
   __weak PacketTunnelProvider *weakSelf = self;
 
   NSError* err;
-  if (![self.tunnelConfig.method isEqualToString:@"aes-128-gcm"] ) {
+  if ([self.tunnelConfig.tunnelType isEqualToString:@"ss"] ) {
     ShadowsocksClient* client = [self getClient];
     if (client == nil) {
       return NO;
     }
     self.tunnel = Tun2socksConnectShadowsocksTunnel(weakSelf, client, isUdpSupported, &err);
-  } else {
+  } else if ([self.tunnelConfig.tunnelType isEqualToString:@"xray"]) {
     DDLogInfo(@"Starting xray %@", [self.tunnelConfig encode]);
     NSString* t = XrayMobileStopXrayServer();
     DDLogInfo(@"Stopping Xray just in case %@", t);
     NSString* s = XrayMobileStartXrayServer(
                                             [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/"],
-                                            self.tunnelConfig.host,
-                                            [self.tunnelConfig.port intValue],
-                                            self.tunnelConfig.password);
+                                            self.tunnelConfig.xrayConfig);
     DDLogInfo(@"Xray started %@", s);
     self.tunnel = XrayMobileConnectLocalSocksTunnel(weakSelf, &err);
+  } else {
+    DDLogError(@"Unknown tunnelType: %@", self.tunnelConfig.tunnelType);
+    return NO;
   }
   if (err != nil) {
     DDLogError(@"Failed to start tun2socks: %@", err);
