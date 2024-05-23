@@ -495,8 +495,6 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
     self.tunnel = Tun2socksConnectShadowsocksTunnel(weakSelf, client, isUdpSupported, &err);
   } else if ([self.tunnelConfig.tunnelType isEqualToString:@"xray"]) {
     DDLogInfo(@"Starting xray %@", [self.tunnelConfig encode]);
-    NSString* t = XrayMobileStopXrayServer();
-    DDLogInfo(@"Stopping Xray just in case %@", t);
     NSString* s = XrayMobileStartXrayServer(
                                             [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/"],
                                             self.tunnelConfig.xrayConfig);

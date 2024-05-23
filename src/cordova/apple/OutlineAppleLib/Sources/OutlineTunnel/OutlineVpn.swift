@@ -167,9 +167,11 @@ public class OutlineVpn: NSObject {
     if activeTunnelId != nil {
       vpnStatusObserver?(.disconnected, activeTunnelId!)
     }
+    var tunnelOptions: [String: Any] = configJson
+    tunnelOptions[MessageKey.tunnelType] = tunnelType
+
     let message = [MessageKey.action: Action.restart, MessageKey.tunnelId: tunnelId,
-                   MessageKey.tunnelType: tunnelType,
-                   MessageKey.config: configJson] as [String : Any]
+                   MessageKey.config: tunnelOptions] as [String : Any]
     self.sendVpnExtensionMessage(message) { response in
       self.onStartVpnExtensionMessage(response, completion: completion)
     }
