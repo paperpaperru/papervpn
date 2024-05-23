@@ -16,9 +16,9 @@ import * as errors from '../../model/errors';
 import * as events from '../../model/events';
 import {Server, ServerType} from '../../model/server';
 
-import {Tunnel, TunnelStatus, ShadowsocksSessionConfig} from '../tunnel';
+import {Tunnel, TunnelStatus, ShadowsocksSessionConfig, XraySessionConfig} from '../tunnel';
 
-import {fetchShadowsocksSessionConfig, staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
+import {fetchShadowsocksSessionConfig, fetchXraySessionConfig, staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
 
 // PLEASE DON'T use this class outside of this `outline_server_repository` folder!
 
@@ -28,7 +28,8 @@ export class OutlineServer implements Server {
   private static readonly SUPPORTED_CIPHERS = ['chacha20-ietf-poly1305', 'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm'];
 
   errorMessageId?: string;
-  private sessionConfig?: ShadowsocksSessionConfig;
+  private shadowsocksSessionConfig?: ShadowsocksSessionConfig;
+  private xraySessionConfig?: XraySessionConfig;
 
   constructor(
     public readonly id: string,
@@ -44,7 +45,7 @@ export class OutlineServer implements Server {
         break;
       case ServerType.STATIC_CONNECTION:
       default:
-        this.sessionConfig = staticKeyToShadowsocksSessionConfig(accessKey);
+        this.shadowsocksSessionConfig = staticKeyToShadowsocksSessionConfig(accessKey);
         break;
     }
 
@@ -77,9 +78,9 @@ export class OutlineServer implements Server {
   }
 
   get address() {
-    if (!this.sessionConfig) return '';
+    if (!this.shadowsocksSessionConfig) return '';
 
-    return `${this.sessionConfig.host}:${this.sessionConfig.port}`;
+    return `${this.shadowsocksSessionConfig.host}:${this.shadowsocksSessionConfig.port}`;
   }
 
   get sessionConfigLocation() {
@@ -96,11 +97,19 @@ export class OutlineServer implements Server {
 
   async connect() {
     if (this.type === ServerType.DYNAMIC_CONNECTION) {
-      this.sessionConfig = await fetchShadowsocksSessionConfig(this.sessionConfigLocation);
+      if (this.sessionConfigLocation.protocol === 'xray:') {
+        this.xraySessionConfig = await fetchXraySessionConfig(this.sessionConfigLocation);
+      } else {
+        this.shadowsocksSessionConfig = await fetchShadowsocksSessionConfig(this.sessionConfigLocation);
+      }
     }
 
     try {
-      await this.tunnel.start(this.sessionConfig);
+      if (this.xraySessionConfig) {
+        await this.tunnel.start(this.xraySessionConfig);
+      } else {
+      await this.tunnel.start(this.shadowsocksSessionConfig);
+      }
     } catch (cause) {
       // e originates in "native" code: either Cordova or Electron's main process.
       // Because of this, we cannot assume "instanceof OutlinePluginError" will work.
@@ -117,7 +126,7 @@ export class OutlineServer implements Server {
       await this.tunnel.stop();
 
       if (this.type === ServerType.DYNAMIC_CONNECTION) {
-        this.sessionConfig = undefined;
+        this.shadowsocksSessionConfig = undefined;
       }
     } catch (e) {
       // All the plugins treat disconnection errors as ErrorCode.UNEXPECTED.
