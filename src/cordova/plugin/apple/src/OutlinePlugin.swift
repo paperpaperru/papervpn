@@ -26,6 +26,7 @@ class OutlinePlugin: CDVPlugin {
 
     private enum Action {
       static let start = "start"
+      static let startXray = "startXray"
       static let stop = "stop"
       static let onStatusChange = "onStatusChange"
     }
@@ -102,6 +103,18 @@ class OutlinePlugin: CDVPlugin {
         }
     }
 
+    /**
+    TODO:
+     Starts the Xray VPN. This method is idempotent for a given tunnel.
+     - Parameters:
+     - command: CDVInvokedUrlCommand, where command.arguments
+     - tunnelId: string, ID of the tunnel
+     - config: [String: Any], represents a server configuration
+     */
+
+    func startXray(_ command: CDVInvokedUrlCommand) {
+        DDLogInfo("startXray")
+    }
     /**
      Stops the VPN. Sends an error if the given tunnel is not running.
      - Parameters:

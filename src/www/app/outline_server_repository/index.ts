@@ -46,7 +46,7 @@ function staticKeysMatch(a: string, b: string): boolean {
 
 // Determines if the key is expected to be a url pointing to an ephemeral session config.
 function isDynamicAccessKey(accessKey: string): boolean {
-  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://');
+  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://') || accessKey.startsWith('xray://');
 }
 
 // NOTE: For extracting a name that the user has explicitly set, only.

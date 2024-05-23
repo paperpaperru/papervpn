@@ -16,7 +16,7 @@ import {SHADOWSOCKS_URI} from 'ShadowsocksConfig';
 
 import * as errors from '../../model/errors';
 
-import {ShadowsocksSessionConfig} from '../tunnel';
+import {ShadowsocksSessionConfig, XraySessionConfig} from '../tunnel';
 
 // DON'T use these methods outside of this folder!
 
@@ -67,6 +67,18 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
   };
 }
 
+function parseXraySessionConfigJson(responseBody: string): XraySessionConfig | null {
+  const responseJson = JSON.parse(responseBody);
+  
+  let host: string;
+  host = responseJson.outbounds[0].settings.vnext[0].address;
+
+  return {
+    xrayConfig: responseBody,
+    host: host,
+  }
+}
+
 // fetches information from a dynamic access key and attempts to parse it
 // TODO(daniellacosse): unit tests
 export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
@@ -90,6 +102,27 @@ export async function fetchShadowsocksSessionConfig(configLocation: URL): Promis
       throw cause;
     }
 
+    throw new errors.ServerAccessKeyInvalid('Failed to parse VPN information fetched from dynamic access key.', {
+      cause,
+    });
+  }
+}
+
+export async function fetchXraySessionConfig(configLocation: URL): Promise<XraySessionConfig> {
+  let response;
+  try {
+    configLocation = new URL(configLocation.toString().replace('xray', 'https'));
+    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
+  } catch (cause) {
+    throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
+  }
+  const responseBody = (await response.text()).trim();
+  try {
+    return parseXraySessionConfigJson(responseBody);
+  } catch (cause) {
+    if (cause instanceof errors.SessionConfigError) {
+      throw cause;
+    }
     throw new errors.ServerAccessKeyInvalid('Failed to parse VPN information fetched from dynamic access key.', {
       cause,
     });

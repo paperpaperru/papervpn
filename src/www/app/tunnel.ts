@@ -20,6 +20,11 @@ export interface ShadowsocksSessionConfig {
   prefix?: string;
 }
 
+export interface XraySessionConfig {
+  xrayConfig?: string;
+  host?: string;
+}
+
 export const enum TunnelStatus {
   CONNECTED,
   DISCONNECTED,
@@ -38,7 +43,7 @@ export interface Tunnel {
   // If there is another running instance, broadcasts a disconnect event and stops the active
   // tunnel. In such case, restarts tunneling while preserving the VPN.
   // Throws OutlinePluginError.
-  start(config: ShadowsocksSessionConfig): Promise<void>;
+  start(config: ShadowsocksSessionConfig | XraySessionConfig): Promise<void>;
 
   // Stops the tunnel and VPN service.
   stop(): Promise<void>;
