@@ -75,7 +75,7 @@ export class SsOutlineServer extends OutlineServer {
     }
 
     try {
-      await this.tunnel.start(this.sessionConfig, false);
+      await this.tunnel.start(this.sessionConfig, 'xray');
     } catch (cause) {
       // e originates in "native" code: either Cordova or Electron's main process.
       // Because of this, we cannot assume "instanceof OutlinePluginError" will work.
