@@ -12,43 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import * as errors from '../../model/errors';
 import * as events from '../../model/events';
 import {Server, ServerType} from '../../model/server';
 
-import {Tunnel, TunnelStatus, ShadowsocksSessionConfig, XraySessionConfig} from '../tunnel';
-
-import {fetchShadowsocksSessionConfig, fetchXraySessionConfig, staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
+import {Tunnel, TunnelStatus} from '../tunnel';
 
 // PLEASE DON'T use this class outside of this `outline_server_repository` folder!
 
-export class OutlineServer implements Server {
+export interface OutlineServer extends Server {
+  sessionConfigLocation: URL
+
+  isOutlineServer: boolean
+  isServerCipherSupported(cipher?: string): boolean
+}
+export abstract class OutlineServer implements Server {
   // We restrict to AEAD ciphers because unsafe ciphers are not supported in go-tun2socks.
   // https://shadowsocks.org/en/spec/AEAD-Ciphers.html
-  private static readonly SUPPORTED_CIPHERS = ['chacha20-ietf-poly1305', 'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm'];
 
   errorMessageId?: string;
-  private shadowsocksSessionConfig?: ShadowsocksSessionConfig;
-  private xraySessionConfig?: XraySessionConfig;
 
-  constructor(
+  public readonly accessKey: string
+
+  protected constructor(
     public readonly id: string,
-    public readonly accessKey: string,
     public readonly type: ServerType,
     private _name: string,
-    private tunnel: Tunnel,
+    protected tunnel: Tunnel,
     private eventQueue: events.EventQueue
   ) {
-    switch (this.type) {
-      case ServerType.DYNAMIC_CONNECTION:
-        this.accessKey = accessKey.replace(/^ssconf:\/\//, 'https://');
-        break;
-      case ServerType.STATIC_CONNECTION:
-      default:
-        this.shadowsocksSessionConfig = staticKeyToShadowsocksSessionConfig(accessKey);
-        break;
-    }
-
     this.tunnel.onStatusChange((status: TunnelStatus) => {
       let statusEvent: events.OutlineEvent;
       switch (status) {
@@ -77,68 +68,7 @@ export class OutlineServer implements Server {
     this._name = newName;
   }
 
-  get address() {
-    if (!this.shadowsocksSessionConfig) return '';
-
-    return `${this.shadowsocksSessionConfig.host}:${this.shadowsocksSessionConfig.port}`;
-  }
-
-  get sessionConfigLocation() {
-    if (this.type !== ServerType.DYNAMIC_CONNECTION) {
-      return;
-    }
-
-    return new URL(this.accessKey);
-  }
-
-  get isOutlineServer() {
-    return this.accessKey.includes('outline=1');
-  }
-
-  async connect() {
-    if (this.type === ServerType.DYNAMIC_CONNECTION) {
-      if (this.sessionConfigLocation.protocol === 'xray:') {
-        this.xraySessionConfig = await fetchXraySessionConfig(this.sessionConfigLocation);
-      } else {
-        this.shadowsocksSessionConfig = await fetchShadowsocksSessionConfig(this.sessionConfigLocation);
-      }
-    }
-
-    try {
-      if (this.xraySessionConfig) {
-        await this.tunnel.start(this.xraySessionConfig, true);
-      } else {
-      await this.tunnel.start(this.shadowsocksSessionConfig, false);
-      }
-    } catch (cause) {
-      // e originates in "native" code: either Cordova or Electron's main process.
-      // Because of this, we cannot assume "instanceof OutlinePluginError" will work.
-      if (cause.errorCode) {
-        throw errors.fromErrorCode(cause.errorCode);
-      }
-
-      throw new errors.ProxyConnectionFailure(`Failed to connect to server ${this.name}.`, {cause});
-    }
-  }
-
-  async disconnect() {
-    try {
-      await this.tunnel.stop();
-
-      if (this.type === ServerType.DYNAMIC_CONNECTION) {
-        this.shadowsocksSessionConfig = undefined;
-      }
-    } catch (e) {
-      // All the plugins treat disconnection errors as ErrorCode.UNEXPECTED.
-      throw new errors.RegularNativeError();
-    }
-  }
-
   checkRunning(): Promise<boolean> {
     return this.tunnel.isRunning();
-  }
-
-  static isServerCipherSupported(cipher?: string) {
-    return cipher !== undefined && OutlineServer.SUPPORTED_CIPHERS.includes(cipher);
   }
 }
