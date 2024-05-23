@@ -19,6 +19,7 @@ import {Tunnel, TunnelStatus} from '../tunnel';
 
 // PLEASE DON'T use this class outside of this `outline_server_repository` folder!
 
+// https://github.com/Microsoft/TypeScript/issues/4670#issuecomment-326585615
 // eslint-disable-next-line
 export interface OutlineServer extends Server {}
 
