@@ -88,10 +88,7 @@ class CordovaTunnel implements Tunnel {
     if (!config) {
       throw new errors.IllegalServerConfiguration();
     }
-    if (tunnelType === 'xray') {
-      return pluginExecWithErrorCode<void>('start', this.id, 'xray', config);
-    }
-    return pluginExecWithErrorCode<void>('start', this.id, 'ss', config);
+    return pluginExecWithErrorCode<void>('start', this.id, tunnelType, config);
   }
 
   stop() {
