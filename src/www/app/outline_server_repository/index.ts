@@ -23,6 +23,8 @@ import {TunnelFactory} from '../tunnel';
 
 import {OutlineServer} from './server';
 import {staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
+import {SsOutlineServer} from "./ss_server";
+import {XrayOutlineServer} from "./xray_server";
 
 // TODO(daniellacosse): write unit tests for these functions
 
@@ -46,7 +48,7 @@ function staticKeysMatch(a: string, b: string): boolean {
 
 // Determines if the key is expected to be a url pointing to an ephemeral session config.
 function isDynamicAccessKey(accessKey: string): boolean {
-  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://');
+  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://') || accessKey.startsWith('xray://');
 }
 
 // NOTE: For extracting a name that the user has explicitly set, only.
@@ -205,7 +207,7 @@ export class OutlineServerRepository implements ServerRepository {
     if (config.host.isIPv6) {
       throw new errors.ServerIncompatible('unsupported IPv6 host address');
     }
-    if (!OutlineServer.isServerCipherSupported(config.method.data)) {
+    if (!SsOutlineServer.isServerCipherSupported(config.method.data)) {
       throw new errors.ShadowsocksUnsupportedCipher(config.method.data || 'unknown');
     }
   }
@@ -304,14 +306,28 @@ export class OutlineServerRepository implements ServerRepository {
   }
 
   private createServer(id: string, accessKey: string, name?: string): OutlineServer {
-    const server = new OutlineServer(
-      id,
-      accessKey,
-      isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
-      name,
-      this.createTunnel(id),
-      this.eventQueue
-    );
+    let server: OutlineServer
+    if ( accessKey.startsWith('ss') ) {
+      server = new SsOutlineServer(
+          id,
+          accessKey,
+          isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
+          name,
+          this.createTunnel(id),
+          this.eventQueue
+      );
+    }
+    else {
+      server = new XrayOutlineServer(
+          id,
+          accessKey,
+          ServerType.DYNAMIC_CONNECTION,
+          name,
+          this.createTunnel(id),
+          this.eventQueue
+      );
+    }
+
 
     try {
       this.validateAccessKey(accessKey);
