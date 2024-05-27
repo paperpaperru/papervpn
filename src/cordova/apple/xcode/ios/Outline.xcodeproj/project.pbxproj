@@ -13,6 +13,10 @@
 		1D3623260D0F684500981E51 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* AppDelegate.m */; };
 		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
 		2A617D29B96942E58B082FAC /* OutlinePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFAFA54943F490EAF4CD5BC /* OutlinePlugin.swift */; };
+		2B01A4322BD8FFA0009D81F3 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B01A4302BD8FF95009D81F3 /* libresolv.tbd */; };
+		2B01A4332BD8FFA9009D81F3 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B01A4312BD8FF95009D81F3 /* libresolv.9.tbd */; };
+		2B01A4342BD9000C009D81F3 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B01A4312BD8FF95009D81F3 /* libresolv.9.tbd */; };
+		2B01A4352BD9000C009D81F3 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B01A4302BD8FF95009D81F3 /* libresolv.tbd */; };
 		301BF552109A68D80062928A /* libCordova.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 301BF535109A57CC0062928A /* libCordova.a */; };
 		302D95F114D2391D003F00A1 /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 302D95EF14D2391D003F00A1 /* MainViewController.m */; };
 		302D95F214D2391D003F00A1 /* MainViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 302D95F014D2391D003F00A1 /* MainViewController.xib */; };
@@ -159,6 +163,8 @@
 		1D3623250D0F684500981E51 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		1D6058910D05DD3D006BFB54 /* Outline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Outline.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		2B01A4302BD8FF95009D81F3 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/lib/libresolv.tbd; sourceTree = DEVELOPER_DIR; };
+		2B01A4312BD8FF95009D81F3 /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk/usr/lib/libresolv.9.tbd; sourceTree = DEVELOPER_DIR; };
 		301BF52D109A57CC0062928A /* CordovaLib/CordovaLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = CordovaLib/CordovaLib.xcodeproj; sourceTree = "<group>"; };
 		301BF56E109A69640062928A /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = SOURCE_ROOT; };
 		302D95EE14D2391D003F00A1 /* MainViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainViewController.h; sourceTree = "<group>"; };
@@ -266,10 +272,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B01A4342BD9000C009D81F3 /* libresolv.9.tbd in Frameworks */,
 				A27B36512B07C51500004A08 /* CocoaLumberjack in Frameworks */,
 				301BF552109A68D80062928A /* libCordova.a in Frameworks */,
 				FC8C310C1FAA88FB004262BE /* NetworkExtension.framework in Frameworks */,
 				A271D4342A70829D009981B2 /* OutlineAppleLib in Frameworks */,
+				2B01A4352BD9000C009D81F3 /* libresolv.tbd in Frameworks */,
 				A27B36532B07C51500004A08 /* CocoaLumberjackSwift in Frameworks */,
 				52CE53E7295B6A310064D03D /* Sentry in Frameworks */,
 				1CE7466BA73B4CCB838EBE21 /* libz.tbd in Frameworks */,
@@ -280,8 +288,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B01A4332BD8FFA9009D81F3 /* libresolv.9.tbd in Frameworks */,
 				FC8C310B1FAA814A004262BE /* NetworkExtension.framework in Frameworks */,
 				52E783062A5880CF00355E64 /* PacketTunnelProvider in Frameworks */,
+				2B01A4322BD8FFA0009D81F3 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +381,8 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2B01A4312BD8FF95009D81F3 /* libresolv.9.tbd */,
+				2B01A4302BD8FF95009D81F3 /* libresolv.tbd */,
 				FC8C310A1FAA814A004262BE /* NetworkExtension.framework */,
 				941052A220F54953928FF2E2 /* libz.tbd */,
 			);

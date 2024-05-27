@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2B0435C02BD8362300C1EF90 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C16782BD8187C0089A47D /* libresolv.9.tbd */; };
+		2B0435C12BD8362300C1EF90 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C167A2BD818860089A47D /* libresolv.tbd */; };
+		2B0435C22BD8362E00C1EF90 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C16782BD8187C0089A47D /* libresolv.9.tbd */; };
+		2B0435C32BD8364500C1EF90 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C167A2BD818860089A47D /* libresolv.tbd */; };
+		2B9C16792BD818860089A47D /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C16782BD8187C0089A47D /* libresolv.9.tbd */; };
+		2B9C167B2BD818900089A47D /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B9C167A2BD818860089A47D /* libresolv.tbd */; };
 		52355CFB295B70030057557B /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 52355CFA295B70030057557B /* Sentry */; };
 		52C198972A587525006E0ACE /* PacketTunnelProvider in Frameworks */ = {isa = PBXBuildFile; productRef = 52C198962A587525006E0ACE /* PacketTunnelProvider */; };
 		52CBB849295BC79300D0073F /* CocoaLumberjack in Frameworks */ = {isa = PBXBuildFile; productRef = 52CBB848295BC79300D0073F /* CocoaLumberjack */; };
@@ -95,6 +101,8 @@
 
 /* Begin PBXFileReference section */
 		19209C3AABCC45AB8CFDD974 /* CDVClipboard.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = CDVClipboard.h; path = "cordova-plugin-clipboard/CDVClipboard.h"; sourceTree = "<group>"; };
+		2B9C16782BD8187C0089A47D /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = usr/lib/libresolv.9.tbd; sourceTree = SDKROOT; };
+		2B9C167A2BD818860089A47D /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		469466FF1BDB44C081741BF5 /* CDVClipboard.m */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.objc; name = CDVClipboard.m; path = "cordova-plugin-clipboard/CDVClipboard.m"; sourceTree = "<group>"; };
 		707060AE18FFC05700755D46 /* MainViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainViewController.xib; sourceTree = "<group>"; };
 		707060B018FFC0D900755D46 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; name = config.xml; path = Outline/config.xml; sourceTree = "<group>"; };
@@ -148,7 +156,9 @@
 				52CBB849295BC79300D0073F /* CocoaLumberjack in Frameworks */,
 				52CBB84B295BC79300D0073F /* CocoaLumberjackSwift in Frameworks */,
 				70BD686318FFB04800A1EFCF /* libCordova.a in Frameworks */,
+				2B0435C22BD8362E00C1EF90 /* libresolv.9.tbd in Frameworks */,
 				52355CFB295B70030057557B /* Sentry in Frameworks */,
+				2B0435C32BD8364500C1EF90 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,7 +166,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B0435C02BD8362300C1EF90 /* libresolv.9.tbd in Frameworks */,
 				F63DC2242970B27A00D92E0A /* OutlineAppleLib in Frameworks */,
+				2B0435C12BD8362300C1EF90 /* libresolv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -164,6 +176,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2B9C16792BD818860089A47D /* libresolv.9.tbd in Frameworks */,
+				2B9C167B2BD818900089A47D /* libresolv.tbd in Frameworks */,
 				FC5FF9471F3E1E8B0032A745 /* NetworkExtension.framework in Frameworks */,
 				52C198972A587525006E0ACE /* PacketTunnelProvider in Frameworks */,
 			);
@@ -212,6 +226,8 @@
 		70BD682518FFB02D00A1EFCF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2B9C167A2BD818860089A47D /* libresolv.tbd */,
+				2B9C16782BD8187C0089A47D /* libresolv.9.tbd */,
 				FC0799F82037545D00A1C822 /* ServiceManagement.framework */,
 				FC5FF9461F3E1E8B0032A745 /* NetworkExtension.framework */,
 				70BD686418FFB06500A1EFCF /* SystemConfiguration.framework */,
