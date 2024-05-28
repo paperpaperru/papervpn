@@ -215,13 +215,14 @@ public class VpnTunnelService extends VpnService {
     tunnelConfig.id = tunnelId;
     tunnelConfig.tunnelType = tunnelType;
 
-    if (!tunnelType.equals("xray")) {
+    if (tunnelType.equals("ss")) {
       tunnelConfig.proxy = new ShadowsocksConfig();
       tunnelConfig.proxy.host = config.getString("host");
       tunnelConfig.proxy.port = config.getInt("port");
       tunnelConfig.proxy.password = config.getString("password");
       tunnelConfig.proxy.method = config.getString("method");
-    } else {
+    } 
+    else if (tunnelType.equals("xray")) {
       tunnelConfig.xrayConfig = new XrayConfig();
       tunnelConfig.xrayConfig.host = config.getString("host");
       tunnelConfig.xrayConfig.config = config.getString("xrayConfig");
@@ -261,7 +262,9 @@ public class VpnTunnelService extends VpnService {
   private synchronized ErrorCode startTunnel(
       final TunnelConfig config, boolean isAutoStart) {
     LOG.info(String.format(Locale.ROOT, "Starting tunnel %s.", config.id));
-    if (!config.tunnelType.equals("xray") && (config.id == null || config.proxy == null)) {
+    if (config.id == null 
+    || (config.tunnelType.equals("ss") && config.proxy == null) 
+    || (config.tunnelType.equals("xray") && config.xrayConfig == null )) {
       return ErrorCode.ILLEGAL_SERVER_CONFIGURATION;
     }
     final boolean isRestart = tunnelConfig != null;
@@ -280,7 +283,7 @@ public class VpnTunnelService extends VpnService {
     ErrorCode errorCode = ErrorCode.NO_ERROR;
     final shadowsocks.Client client;
     
-    if (!config.tunnelType.equals("xray") ) {
+    if (config.tunnelType.equals("ss")) {
       final shadowsocks.Config configCopy = new shadowsocks.Config();
       configCopy.setHost(config.proxy.host);
       configCopy.setPort(config.proxy.port);
@@ -330,10 +333,10 @@ public class VpnTunnelService extends VpnService {
     final boolean remoteUdpForwardingEnabled =
         isAutoStart ? tunnelStore.isUdpSupported() : errorCode == ErrorCode.NO_ERROR;
     try {
-      if (!tunnelConfig.tunnelType.equals("xray")) {
+      if (tunnelConfig.tunnelType.equals("ss")) {
         vpnTunnel.connectShadowsocksTunnel(client, remoteUdpForwardingEnabled);
       }
-      else {
+      else if (tunnelConfig.tunnelType.equals("xray")) {
         vpnTunnel.connectXrayTunnel(tunnelConfig.xrayConfig.config);
       }
     } catch (Exception e) {
@@ -382,9 +385,9 @@ public class VpnTunnelService extends VpnService {
   /* Helper method that stops Shadowsocks, tun2socks, and tears down the VPN. */
   private void stopVpnTunnel() {
     if (tunnelConfig != null ) {
-      if (!tunnelConfig.tunnelType.equals("xray"))
+      if (tunnelConfig.tunnelType.equals("ss"))
         vpnTunnel.disconnectShadowsocksTunnel();
-      else
+      else if (tunnelConfig.tunnelType.equals("xray"))
         vpnTunnel.disconnectXrayTunnel();
     }
     vpnTunnel.tearDownVpn();
@@ -531,7 +534,7 @@ public class VpnTunnelService extends VpnService {
     JSONObject tunnel = new JSONObject();
     try {
       tunnel.put(TUNNEL_ID_KEY, config.id).put(TUNNEL_TYPE_KEY, config.tunnelType);
-      if (!config.tunnelType.equals("xray")) {
+      if (config.tunnelType.equals("ss")) {
         JSONObject proxyConfig = new JSONObject();
         proxyConfig.put("host", config.proxy.host);
         proxyConfig.put("port", config.proxy.port);
@@ -548,7 +551,8 @@ public class VpnTunnelService extends VpnService {
         }
 
         tunnel.put(TUNNEL_CONFIG_KEY, proxyConfig);
-      } else {
+      } 
+      else if (config.tunnelType.equals("xray")) {
         JSONObject xrayConfig = new JSONObject();
         xrayConfig.put("host", config.xrayConfig.host);
         xrayConfig.put("config", config.xrayConfig.config);
