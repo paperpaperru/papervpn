@@ -307,7 +307,7 @@ export class OutlineServerRepository implements ServerRepository {
 
   private createServer(id: string, accessKey: string, name?: string): OutlineServer {
     let server: OutlineServer
-    if ( accessKey.startsWith('ss') ) {
+    if ( accessKey.startsWith('ss') || accessKey.startsWith('https') ) {
       server = new SsOutlineServer(
           id,
           accessKey,
