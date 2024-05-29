@@ -64,12 +64,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
     return html`
       <style>
         :host {
-          --app-toolbar-height: 2.5rem;
-          --app-toolbar-gutter: .5rem;
-          --app-toolbar-button-gutter: .75rem;
-          --app-header-height: 3.5rem;
-          --contact-view-gutter: calc(var(--app-toolbar-gutter) + var(--app-toolbar-button-gutter));
-          --contact-view-max-width: 400px;
+          --app-toolbar-height: 40px;
           --light-green: #2fbea5;
           --medium-green: #009688;
           --dark-green: #263238;
@@ -82,14 +77,14 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         app-header {
-          height: var(--app-header-height);
+          height: 56px;
         }
 
         app-toolbar {
           height: var(--app-toolbar-height);
-          color: #fff;
-          padding: var(--app-toolbar-gutter);
-          background: var(--dark-green);
+          color: var(--main-green);
+          padding: 8px;
+          background: var(--outline-black);
           text-align: center;
           display: flex;
           justify-content: space-between;
@@ -97,18 +92,17 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
 
         app-toolbar [main-title] {
           flex: 2 1 100%;
-          text-transform: capitalize;
         }
 
         app-toolbar img {
-          height: 19px;
+          height: 28px;
           margin-top: 2px;
+          color: var(--main-green)
         }
 
-        app-toolbar paper-button {
+        app-toolbar paper-icon-button {
           /* make the ink color (used for tap animations) actually visible */
-          --paper-icon-button-ink-color: #eff;
-          padding: var(--app-toolbar-button-gutter);
+          --paper-icon-button-ink-color: #000;
         }
 
         #app-toolbar-left,
@@ -136,16 +130,17 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         #drawer-nav paper-item {
           cursor: pointer;
           font-size: 16px;
+          font-family: var(--outline-font-family);
           --paper-item-selected: {
-            color: var(--medium-green);
+            color: var(--outline-black);
             background-color: var(--light-gray);
-            font-weight: normal;
+            font-weight: bold;
           }
         }
 
         #drawer-nav paper-item:focus::before,
         #drawer-nav paper-item:focus::after {
-          color: var(--medium-green);
+          color: var(--outline-black);
           background-color: var(--light-gray);
         }
         /* rtl:end:ignore */
@@ -157,15 +152,14 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         #logo-nav {
-          background-color: var(--dark-green);
+          background-color: var(--main-green);
           text-align: center;
           height: 120px;
         }
 
         #logo {
-          width: 60px;
-          height: 60px;
-          margin-top: 30px;
+          width: 100%;
+          height: 100%;
         }
 
         .nav-hr {
@@ -185,7 +179,6 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
 
         #drawer-nav paper-item {
           min-height: 32px;
-          text-transform: capitalize;
         }
 
         .first-menu-item {
@@ -222,7 +215,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         paper-toast {
-          --paper-toast-background-color: var(--dark-green);
+          --paper-toast-background-color: var(--outline-black);
           align-items: center;
           display: flex;
           flex-direction: row;
@@ -247,11 +240,6 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         @media (min-height: 650px) {
           #logo-nav {
             height: 180px;
-          }
-          #logo {
-            width: 68px;
-            height: 68px;
-            margin-top: 56px;
           }
           #drawer-nav paper-item {
             min-height: 48px;
@@ -473,72 +461,72 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         type: Object,
         readonly: true,
         value: {
-          af: {id: 'af', name: 'Afrikaans', dir: 'ltr'},
-          am: {id: 'am', name: 'አማርኛ', dir: 'ltr'},
-          ar: {id: 'ar', name: 'العربية', dir: 'rtl'},
-          az: {id: 'az', name: 'azərbaycan', dir: 'ltr'},
-          bg: {id: 'bg', name: 'български', dir: 'ltr'},
-          bn: {id: 'bn', name: 'বাংলা', dir: 'ltr'},
-          bs: {id: 'bs', name: 'bosanski', dir: 'ltr'},
-          ca: {id: 'ca', name: 'català', dir: 'ltr'},
-          cs: {id: 'cs', name: 'Čeština', dir: 'ltr'},
-          da: {id: 'da', name: 'Dansk', dir: 'ltr'},
-          de: {id: 'de', name: 'Deutsch', dir: 'ltr'},
-          el: {id: 'el', name: 'Ελληνικά', dir: 'ltr'},
+          // af: {id: 'af', name: 'Afrikaans', dir: 'ltr'},
+          // am: {id: 'am', name: 'አማርኛ', dir: 'ltr'},
+          // ar: {id: 'ar', name: 'العربية', dir: 'rtl'},
+          // az: {id: 'az', name: 'azərbaycan', dir: 'ltr'},
+          // bg: {id: 'bg', name: 'български', dir: 'ltr'},
+          // bn: {id: 'bn', name: 'বাংলা', dir: 'ltr'},
+          // bs: {id: 'bs', name: 'bosanski', dir: 'ltr'},
+          // ca: {id: 'ca', name: 'català', dir: 'ltr'},
+          // cs: {id: 'cs', name: 'Čeština', dir: 'ltr'},
+          // da: {id: 'da', name: 'Dansk', dir: 'ltr'},
+          // de: {id: 'de', name: 'Deutsch', dir: 'ltr'},
+          // el: {id: 'el', name: 'Ελληνικά', dir: 'ltr'},
           en: {id: 'en', name: 'English', dir: 'ltr'},
-          'en-GB': {id: 'en-GB', name: 'English (United Kingdom)', dir: 'ltr'},
-          es: {id: 'es', name: 'Español', dir: 'ltr'},
-          'es-419': {id: 'es-419', name: 'Español (Latinoamérica)', dir: 'ltr'},
-          et: {id: 'et', name: 'eesti', dir: 'ltr'},
-          fa: {id: 'fa', name: 'فارسی', dir: 'rtl'},
-          fi: {id: 'fi', name: 'Suomi', dir: 'ltr'},
-          fil: {id: 'fil', name: 'Filipino', dir: 'ltr'},
-          fr: {id: 'fr', name: 'Français', dir: 'ltr'},
-          he: {id: 'he', name: 'עברית', dir: 'rtl'},
-          hi: {id: 'hi', name: 'हिन्दी', dir: 'ltr'},
-          hr: {id: 'hr', name: 'Hrvatski', dir: 'ltr'},
-          hu: {id: 'hu', name: 'magyar', dir: 'ltr'},
-          hy: {id: 'hy', name: 'հայերեն', dir: 'ltr'},
-          id: {id: 'id', name: 'Indonesia', dir: 'ltr'},
-          is: {id: 'is', name: 'íslenska', dir: 'ltr'},
-          it: {id: 'it', name: 'Italiano', dir: 'ltr'},
-          ja: {id: 'ja', name: '日本語', dir: 'ltr'},
-          ka: {id: 'ka', name: 'ქართული', dir: 'ltr'},
-          kk: {id: 'kk', name: 'қазақ тілі', dir: 'ltr'},
-          km: {id: 'km', name: 'ខ្មែរ', dir: 'ltr'},
-          ko: {id: 'ko', name: '한국어', dir: 'ltr'},
-          lo: {id: 'lo', name: 'ລາວ', dir: 'ltr'},
-          lt: {id: 'lt', name: 'lietuvių', dir: 'ltr'},
-          lv: {id: 'lv', name: 'latviešu', dir: 'ltr'},
-          mk: {id: 'mk', name: 'македонски', dir: 'ltr'},
-          mn: {id: 'mn', name: 'монгол', dir: 'ltr'},
-          ms: {id: 'ms', name: 'Melayu', dir: 'ltr'},
-          mr: {id: 'mr', name: 'मराठी', dir: 'ltr'},
-          my: {id: 'my', name: 'မြန်မာ', dir: 'ltr'},
-          ne: {id: 'ne', name: 'नेपाली', dir: 'ltr'},
-          nl: {id: 'nl', name: 'Nederlands', dir: 'ltr'},
-          no: {id: 'no', name: 'norsk', dir: 'ltr'},
-          pl: {id: 'pl', name: 'polski', dir: 'ltr'},
-          'pt-BR': {id: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr'},
-          'pt-PT': {id: 'pt-PT', name: 'Português (Portugal)', dir: 'ltr'},
-          ro: {id: 'ro', name: 'română', dir: 'ltr'},
+          // 'en-GB': {id: 'en-GB', name: 'English (United Kingdom)', dir: 'ltr'},
+          // es: {id: 'es', name: 'Español', dir: 'ltr'},
+          // 'es-419': {id: 'es-419', name: 'Español (Latinoamérica)', dir: 'ltr'},
+          // et: {id: 'et', name: 'eesti', dir: 'ltr'},
+          // fa: {id: 'fa', name: 'فارسی', dir: 'rtl'},
+          // fi: {id: 'fi', name: 'Suomi', dir: 'ltr'},
+          // fil: {id: 'fil', name: 'Filipino', dir: 'ltr'},
+          // fr: {id: 'fr', name: 'Français', dir: 'ltr'},
+          // he: {id: 'he', name: 'עברית', dir: 'rtl'},
+          // hi: {id: 'hi', name: 'हिन्दी', dir: 'ltr'},
+          // hr: {id: 'hr', name: 'Hrvatski', dir: 'ltr'},
+          // hu: {id: 'hu', name: 'magyar', dir: 'ltr'},
+          // hy: {id: 'hy', name: 'հայերեն', dir: 'ltr'},
+          // id: {id: 'id', name: 'Indonesia', dir: 'ltr'},
+          // is: {id: 'is', name: 'íslenska', dir: 'ltr'},
+          // it: {id: 'it', name: 'Italiano', dir: 'ltr'},
+          // ja: {id: 'ja', name: '日本語', dir: 'ltr'},
+          // ka: {id: 'ka', name: 'ქართული', dir: 'ltr'},
+          // kk: {id: 'kk', name: 'қазақ тілі', dir: 'ltr'},
+          // km: {id: 'km', name: 'ខ្មែរ', dir: 'ltr'},
+          // ko: {id: 'ko', name: '한국어', dir: 'ltr'},
+          // lo: {id: 'lo', name: 'ລາວ', dir: 'ltr'},
+          // lt: {id: 'lt', name: 'lietuvių', dir: 'ltr'},
+          // lv: {id: 'lv', name: 'latviešu', dir: 'ltr'},
+          // mk: {id: 'mk', name: 'македонски', dir: 'ltr'},
+          // mn: {id: 'mn', name: 'монгол', dir: 'ltr'},
+          // ms: {id: 'ms', name: 'Melayu', dir: 'ltr'},
+          // mr: {id: 'mr', name: 'मराठी', dir: 'ltr'},
+          // my: {id: 'my', name: 'မြန်မာ', dir: 'ltr'},
+          // ne: {id: 'ne', name: 'नेपाली', dir: 'ltr'},
+          // nl: {id: 'nl', name: 'Nederlands', dir: 'ltr'},
+          // no: {id: 'no', name: 'norsk', dir: 'ltr'},
+          // pl: {id: 'pl', name: 'polski', dir: 'ltr'},
+          // 'pt-BR': {id: 'pt-BR', name: 'Português (Brasil)', dir: 'ltr'},
+          // 'pt-PT': {id: 'pt-PT', name: 'Português (Portugal)', dir: 'ltr'},
+          // ro: {id: 'ro', name: 'română', dir: 'ltr'},
           ru: {id: 'ru', name: 'Русский', dir: 'ltr'},
-          si: {id: 'si', name: 'සිංහල', dir: 'ltr'},
-          sk: {id: 'sk', name: 'Slovenčina', dir: 'ltr'},
-          sl: {id: 'sl', name: 'slovenščina', dir: 'ltr'},
-          sq: {id: 'sq', name: 'shqip', dir: 'ltr'},
-          sr: {id: 'sr', name: 'српски', dir: 'ltr'},
-          'sr-Latn': {id: 'sr-Latn', name: 'srpski (latinica)', dir: 'ltr'},
-          sv: {id: 'sv', name: 'Svenska', dir: 'ltr'},
-          sw: {id: 'sw', name: 'Kiswahili', dir: 'ltr'},
-          ta: {id: 'ta', name: 'தமிழ்', dir: 'ltr'},
-          th: {id: 'th', name: 'ไทย', dir: 'ltr'},
-          tr: {id: 'tr', name: 'Türkçe', dir: 'ltr'},
-          uk: {id: 'uk', name: 'Українська', dir: 'ltr'},
-          ur: {id: 'ur', name: 'اردو', dir: 'rtl'},
-          vi: {id: 'vi', name: 'Tiếng Việt', dir: 'ltr'},
-          'zh-CN': {id: 'zh-CN', name: '简体中文', dir: 'ltr'},
-          'zh-TW': {id: 'zh-TW', name: '繁體中文', dir: 'ltr'},
+          // si: {id: 'si', name: 'සිංහල', dir: 'ltr'},
+          // sk: {id: 'sk', name: 'Slovenčina', dir: 'ltr'},
+          // sl: {id: 'sl', name: 'slovenščina', dir: 'ltr'},
+          // sq: {id: 'sq', name: 'shqip', dir: 'ltr'},
+          // sr: {id: 'sr', name: 'српски', dir: 'ltr'},
+          // 'sr-Latn': {id: 'sr-Latn', name: 'srpski (latinica)', dir: 'ltr'},
+          // sv: {id: 'sv', name: 'Svenska', dir: 'ltr'},
+          // sw: {id: 'sw', name: 'Kiswahili', dir: 'ltr'},
+          // ta: {id: 'ta', name: 'தமிழ்', dir: 'ltr'},
+          // th: {id: 'th', name: 'ไทย', dir: 'ltr'},
+          // tr: {id: 'tr', name: 'Türkçe', dir: 'ltr'},
+          // uk: {id: 'uk', name: 'Українська', dir: 'ltr'},
+          // ur: {id: 'ur', name: 'اردو', dir: 'rtl'},
+          // vi: {id: 'vi', name: 'Tiếng Việt', dir: 'ltr'},
+          // 'zh-CN': {id: 'zh-CN', name: '简体中文', dir: 'ltr'},
+          // 'zh-TW': {id: 'zh-TW', name: '繁體中文', dir: 'ltr'},
         },
       },
       language: {
