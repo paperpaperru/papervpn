@@ -39,6 +39,7 @@ import org.outline.IVpnTunnelService;
 import org.outline.TunnelConfig;
 import org.outline.log.SentryErrorReporter;
 import org.outline.shadowsocks.ShadowsocksConfig;
+import org.outline.shadowsocks.XrayConfig;
 import shadowsocks.Shadowsocks;
 
 /**
@@ -52,6 +53,7 @@ public class VpnTunnelService extends VpnService {
   private static final String NOTIFICATION_CHANNEL_ID = "outline-vpn";
   private static final String TUNNEL_ID_KEY = "id";
   private static final String TUNNEL_CONFIG_KEY = "config";
+  private static final String TUNNEL_TYPE_KEY = "tunnelType";
 
   public static final String STATUS_BROADCAST_KEY = "onStatusChange";
 
@@ -204,18 +206,27 @@ public class VpnTunnelService extends VpnService {
    * @throws JSONException if parsing `config` fails.
    * @return populated TunnelConfig
    */
-  public static TunnelConfig makeTunnelConfig(final String tunnelId, final JSONObject config)
+  public static TunnelConfig makeTunnelConfig(final String tunnelId, final String tunnelType, final JSONObject config)
       throws Exception {
     if (tunnelId == null || config == null) {
       throw new IllegalArgumentException("Must provide a tunnel ID and JSON configuration");
     }
     final TunnelConfig tunnelConfig = new TunnelConfig();
     tunnelConfig.id = tunnelId;
-    tunnelConfig.proxy = new ShadowsocksConfig();
-    tunnelConfig.proxy.host = config.getString("host");
-    tunnelConfig.proxy.port = config.getInt("port");
-    tunnelConfig.proxy.password = config.getString("password");
-    tunnelConfig.proxy.method = config.getString("method");
+    tunnelConfig.tunnelType = tunnelType;
+
+    if (tunnelType.equals("ss")) {
+      tunnelConfig.proxy = new ShadowsocksConfig();
+      tunnelConfig.proxy.host = config.getString("host");
+      tunnelConfig.proxy.port = config.getInt("port");
+      tunnelConfig.proxy.password = config.getString("password");
+      tunnelConfig.proxy.method = config.getString("method");
+    } 
+    else if (tunnelType.equals("xray")) {
+      tunnelConfig.xrayConfig = new XrayConfig();
+      tunnelConfig.xrayConfig.host = config.getString("host");
+      tunnelConfig.xrayConfig.config = config.getString("xrayConfig");
+    }
     // `name` and `prefix` are optional properties.
     try {
       tunnelConfig.name = config.getString("name");
@@ -251,7 +262,9 @@ public class VpnTunnelService extends VpnService {
   private synchronized ErrorCode startTunnel(
       final TunnelConfig config, boolean isAutoStart) {
     LOG.info(String.format(Locale.ROOT, "Starting tunnel %s.", config.id));
-    if (config.id == null || config.proxy == null) {
+    if (config.id == null 
+    || (config.tunnelType.equals("ss") && config.proxy == null) 
+    || (config.tunnelType.equals("xray") && config.xrayConfig == null )) {
       return ErrorCode.ILLEGAL_SERVER_CONFIGURATION;
     }
     final boolean isRestart = tunnelConfig != null;
@@ -267,16 +280,17 @@ public class VpnTunnelService extends VpnService {
       }
     }
 
-    final shadowsocks.Config configCopy = new shadowsocks.Config();
-    configCopy.setHost(config.proxy.host);
-    configCopy.setPort(config.proxy.port);
-    configCopy.setCipherName(config.proxy.method);
-    configCopy.setPassword(config.proxy.password);
-    configCopy.setPrefix(config.proxy.prefix);
-
-    final shadowsocks.Client client;
     ErrorCode errorCode = ErrorCode.NO_ERROR;
-    if ( !configCopy.getCipherName().equals("aes-128-gcm") ) {
+    final shadowsocks.Client client;
+    
+    if (config.tunnelType.equals("ss")) {
+      final shadowsocks.Config configCopy = new shadowsocks.Config();
+      configCopy.setHost(config.proxy.host);
+      configCopy.setPort(config.proxy.port);
+      configCopy.setCipherName(config.proxy.method);
+      configCopy.setPassword(config.proxy.password);
+      configCopy.setPrefix(config.proxy.prefix);
+
       try {
         client = new shadowsocks.Client(configCopy);
       } catch (Exception e) {
@@ -319,12 +333,11 @@ public class VpnTunnelService extends VpnService {
     final boolean remoteUdpForwardingEnabled =
         isAutoStart ? tunnelStore.isUdpSupported() : errorCode == ErrorCode.NO_ERROR;
     try {
-      if ( !tunnelConfig.proxy.method.equals("aes-128-gcm")) {
+      if (tunnelConfig.tunnelType.equals("ss")) {
         vpnTunnel.connectShadowsocksTunnel(client, remoteUdpForwardingEnabled);
       }
-      else {
-        vpnTunnel.connectXrayTunnel(
-                tunnelConfig.proxy.host, tunnelConfig.proxy.port, tunnelConfig.proxy.password);
+      else if (tunnelConfig.tunnelType.equals("xray")) {
+        vpnTunnel.connectXrayTunnel(tunnelConfig.xrayConfig.config);
       }
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to connect the tunnel", e);
@@ -371,10 +384,10 @@ public class VpnTunnelService extends VpnService {
 
   /* Helper method that stops Shadowsocks, tun2socks, and tears down the VPN. */
   private void stopVpnTunnel() {
-    if ( tunnelConfig != null ) {
-      if (!tunnelConfig.proxy.method.equals("aes-128-gcm"))
+    if (tunnelConfig != null ) {
+      if (tunnelConfig.tunnelType.equals("ss"))
         vpnTunnel.disconnectShadowsocksTunnel();
-      else
+      else if (tunnelConfig.tunnelType.equals("xray"))
         vpnTunnel.disconnectXrayTunnel();
     }
     vpnTunnel.tearDownVpn();
@@ -504,8 +517,9 @@ public class VpnTunnelService extends VpnService {
     }
     try {
       final String tunnelId = tunnel.getString(TUNNEL_ID_KEY);
+      final String tunnelType = tunnel.getString(TUNNEL_TYPE_KEY);
       final JSONObject jsonConfig = tunnel.getJSONObject(TUNNEL_CONFIG_KEY);
-      final TunnelConfig config = makeTunnelConfig(tunnelId, jsonConfig);
+      final TunnelConfig config = makeTunnelConfig(tunnelId, tunnelType, jsonConfig);
       // Start the service in the foreground as per Android 8+ background service execution limits.
       // Requires android.permission.FOREGROUND_SERVICE since Android P.
       startForegroundWithNotification(config);
@@ -519,22 +533,32 @@ public class VpnTunnelService extends VpnService {
     LOG.info("Storing active tunnel.");
     JSONObject tunnel = new JSONObject();
     try {
-      JSONObject proxyConfig = new JSONObject();
-      proxyConfig.put("host", config.proxy.host);
-      proxyConfig.put("port", config.proxy.port);
-      proxyConfig.put("password", config.proxy.password);
-      proxyConfig.put("method", config.proxy.method);
+      tunnel.put(TUNNEL_ID_KEY, config.id).put(TUNNEL_TYPE_KEY, config.tunnelType);
+      if (config.tunnelType.equals("ss")) {
+        JSONObject proxyConfig = new JSONObject();
+        proxyConfig.put("host", config.proxy.host);
+        proxyConfig.put("port", config.proxy.port);
+        proxyConfig.put("password", config.proxy.password);
+        proxyConfig.put("method", config.proxy.method);
 
-      if (config.proxy.prefix != null) {
-        char[] chars = new char[config.proxy.prefix.length];
-        for (int i = 0; i < config.proxy.prefix.length; i++) {
-          // Unsigned bit width extension requires a mask in Java.
-          chars[i] = (char)(config.proxy.prefix[i] & 0xFF);
+        if (config.proxy.prefix != null) {
+          char[] chars = new char[config.proxy.prefix.length];
+          for (int i = 0; i < config.proxy.prefix.length; i++) {
+            // Unsigned bit width extension requires a mask in Java.
+            chars[i] = (char)(config.proxy.prefix[i] & 0xFF);
+           }
+          proxyConfig.put("prefix", new String(chars));
         }
-        proxyConfig.put("prefix", new String(chars));
-      }
 
-      tunnel.put(TUNNEL_ID_KEY, config.id).put(TUNNEL_CONFIG_KEY, proxyConfig);
+        tunnel.put(TUNNEL_CONFIG_KEY, proxyConfig);
+      } 
+      else if (config.tunnelType.equals("xray")) {
+        JSONObject xrayConfig = new JSONObject();
+        xrayConfig.put("host", config.xrayConfig.host);
+        xrayConfig.put("config", config.xrayConfig.config);
+
+        tunnel.put(TUNNEL_CONFIG_KEY, xrayConfig);
+      }
       tunnelStore.save(tunnel);
     } catch (JSONException e) {
       LOG.log(Level.SEVERE, "Failed to store JSON tunnel data", e);

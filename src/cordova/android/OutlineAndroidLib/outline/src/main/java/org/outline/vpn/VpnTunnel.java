@@ -149,14 +149,13 @@ public class VpnTunnel {
     tunnel = Tun2socks.connectShadowsocksTunnel(tunFd.getFd(), client, isUdpEnabled);
   }
 
-  public synchronized void connectXrayTunnel(
-          String host, int port, String uuid) throws Exception {
+  public synchronized void connectXrayTunnel(String config) throws Exception {
     this.checkTunnelIsReadyToConnect();
     LOG.info("Connecting the Xray tunnel.");
 
     LOG.fine("Starting Xray...");
     String s = XrayMobile.startXrayServer(
-            this.vpnService.getFilesDir().getAbsolutePath(), host, port, uuid);
+            this.vpnService.getFilesDir().getAbsolutePath(), config);
     LOG.info(String.format("XrayMobile.startXrayServer %s", s));
     LOG.fine("Starting local tun2socks...");
     tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd());
