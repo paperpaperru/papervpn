@@ -50,9 +50,9 @@ NSString *const kDefaultPathKey = @"defaultPath";
 - (id)init {
   self = [super init];
 #if (TARGET_OS_OSX || TARGET_OS_MACCATALYST)
-  NSString *appGroup = @"QT8Z3Q9V3A.org.outline.macos.client";
+  NSString *appGroup = @"PZ6PPU9KKM.io.papervpn.client";
 #else
-  NSString *appGroup = @"group.org.outline.ios.client";
+  NSString *appGroup = @"group.com.papermedia.global";
 #endif
   NSURL *containerUrl = [[NSFileManager defaultManager]
                          containerURLForSecurityApplicationGroupIdentifier:appGroup];
@@ -65,7 +65,7 @@ NSString *const kDefaultPathKey = @"defaultPath";
 
   _tunnelStore = [[OutlineTunnelStore alloc] initWithAppGroup:appGroup];
 
-  _packetQueue = dispatch_queue_create("org.outline.ios.packetqueue", DISPATCH_QUEUE_SERIAL);
+  _packetQueue = dispatch_queue_create("io.papervpn.packetqueue", DISPATCH_QUEUE_SERIAL);
 
   return self;
 }

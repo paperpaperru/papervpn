@@ -43,10 +43,10 @@ class OutlinePlugin: CDVPlugin {
 #if os(macOS) || targetEnvironment(macCatalyst)
 
     private static let kPlatform = "macOS"
-    private static let kAppGroup = "QT8Z3Q9V3A.org.outline.macos.client"
+    private static let kAppGroup = "PZ6PPU9KKM.io.papervpn.client"
 #else
     private static let kPlatform = "iOS"
-    private static let kAppGroup = "group.org.outline.ios.client"
+    private static let kAppGroup = "group.com.papermedia.global"
 #endif
 
     override func pluginInitialize() {
