@@ -49,6 +49,12 @@ export async function main(...parameters) {
     cordova.on('verbose', message => console.debug(`[cordova:verbose] ${message}`));
   }
 
+  await replace({
+    files: ['config.xml', 'src/cordova/apple/xcode/macos/Outline/config.xml'],
+    from: /VERSION/g, to: versionName
+  });
+
+
   switch (platform + buildMode) {
     case 'android' + 'debug':
       return androidDebug(verbose);
