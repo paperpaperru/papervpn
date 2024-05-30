@@ -70,11 +70,11 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
 function parseXraySessionConfigJson(responseBody: string): XraySessionConfig | null {
   const responseJson = JSON.parse(responseBody);
   
-  let host: string;
-  host = responseJson.outbounds[0].settings.vnext[0].address;
+  const host: string = responseJson.outbounds[0].settings.vnext[0].address;
+  responseJson.inbounds[0].port = 12080
 
   return {
-    xrayConfig: responseBody,
+    xrayConfig: JSON.stringify(responseJson),
     host: host,
   }
 }
