@@ -30,6 +30,7 @@
 
     <!-- Android -->
     <platform name="android">
+        <preference name="AppendUserAgent" value="PaperVPN/VERSION (Android)" />
         <preference name="SplashMaintainAspectRatio" value="true" />
 
         <icon density="ldpi" src="resources/icons/android/icon_mdpi.png" />
@@ -77,6 +78,7 @@
 
     <!-- iOS -->
     <platform name="ios">
+        <preference name="AppendUserAgent" value="PaperVPN/VERSION (iOS)" />
         <preference name="deployment-target" value="11.0" />
         <preference name="scheme" value="app" />
         <preference name="hostname" value="localhost" />
