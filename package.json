@@ -1,7 +1,7 @@
 {
   "name": "outline-client",
   "version": "0.0.0",
-  "productName": "Outline",
+  "productName": "PaperVPN",
   "scripts": {
     "action:help": "npm run action list",
     "action:list": "npm run action list",

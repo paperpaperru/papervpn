@@ -95,7 +95,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         app-toolbar img {
-          height: 28px;
+          height: 19px;
           margin-top: 2px;
           color: var(--main-green)
         }
