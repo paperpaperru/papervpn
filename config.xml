@@ -84,6 +84,7 @@
         <preference name="StatusBarOverlaysWebView" value="false" />
         <preference name="StatusBarBackgroundColor" value="#263238" />
         <preference name="StatusBarStyle" value="lightcontent" />
+        <preference name="AllowInlineMediaPlayback" value="true" />
 
         <!-- https://github.com/apache/cordova-plugin-splashscreen#launch-storyboard-images -->
         <splash src="resources/splashscreen/ios/splashscreen@2x~universal~anyany.png" />
