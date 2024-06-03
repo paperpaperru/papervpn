@@ -50,7 +50,7 @@ export async function main(...parameters) {
   }
 
   await replace({
-    files: ['config.xml', 'src/cordova/apple/xcode/macos/Outline/config.xml'],
+    files: ['config.xml', 'src/cordova/apple/xcode/macos/PaperVPN/config.xml'],
     from: /VERSION/g, to: versionName
   });
 
