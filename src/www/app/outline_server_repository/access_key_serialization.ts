@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/// <reference types="cordova-plugin-device" />
+
 import {SHADOWSOCKS_URI} from 'ShadowsocksConfig';
 
 import * as errors from '../../model/errors';
 
 import {ShadowsocksSessionConfig} from '../tunnel';
+
+import {onceEnvVars} from "../environment";
 
 // DON'T use these methods outside of this folder!
 
@@ -72,7 +76,18 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
 export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
   let response;
   try {
-    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
+    const envVars = await onceEnvVars;
+    const options: any = {
+      cache: 'no-store',
+      redirect: 'follow',
+    }
+    // setting User-Agent header does not work for Android, breaks fetch() on iOS
+    if ( device.platform == "macOS" )
+      options.headers = {'User-Agent': `PaperVPN/${envVars.APP_VERSION} (${device.platform}/${device.version})`}
+
+    // setting query params confuses keys server
+    //configLocation.searchParams.append("ua", `PaperVPN/${envVars.APP_VERSION} (${device.platform}/${device.version})`);
+    response = await fetch(configLocation, options);
   } catch (cause) {
     throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
   }
