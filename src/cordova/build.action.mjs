@@ -93,7 +93,7 @@ function getXcodeBuildArgs(platform) {
     '-workspace',
     path.join(getRootDir(), 'src', 'cordova', 'apple', workspaceFilename),
     '-scheme',
-    'Outline',
+    'PaperVPN',
     '-destination',
     destination,
   ];
