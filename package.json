@@ -96,6 +96,7 @@
     "cordova-lib": "^11.0.0",
     "cordova-osx": "github:apache/cordova-osx",
     "cordova-plugin-clipboard": "github:Jigsaw-Code/outline-cordova-plugin-clipboard#v2.0.0",
+    "cordova-plugin-device": "github:paperpaperru/cordova-plugin-device#ea0b7cb15bcf25c926481d98c9b0d546b5633fb7",
     "cordova-plugin-outline": "file:src/cordova/plugin",
     "cordova-webintent": "github:cordova-misc/cordova-webintent#v2.0.0",
     "css-loader": "^5.0.1",
@@ -151,7 +152,8 @@
       "cordova-plugin-splashscreen": {},
       "cordova-plugin-statusbar": {},
       "cordova-plugin-clipboard": {},
-      "cordova-webintent": {}
+      "cordova-webintent": {},
+      "cordova-plugin-device": {}
     },
     "platforms": [
       "browser",

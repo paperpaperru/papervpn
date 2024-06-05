@@ -35,6 +35,7 @@
 		FC5FF9501F3E1FD40032A745 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FC5FF9461F3E1E8B0032A745 /* NetworkExtension.framework */; };
 		FC6E7F8E204DC1BE003CB365 /* CDVMacOsUrlHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC6E7F8D204DC1BE003CB365 /* CDVMacOsUrlHandler.swift */; };
 		FC7D56051F86969E00ABD5CA /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC7D56041F86969E00ABD5CA /* EventMonitor.swift */; };
+		46F44190008C45AF92173F22 /* CDVDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 71BB13C82F424E5DBAA941CB /* CDVDevice.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -132,6 +133,8 @@
 		FC6E7F8D204DC1BE003CB365 /* CDVMacOsUrlHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CDVMacOsUrlHandler.swift; sourceTree = "<group>"; };
 		FC7D56041F86969E00ABD5CA /* EventMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventMonitor.swift; sourceTree = "<group>"; };
 		FCB2DED41F3E3CAD000C6A44 /* VpnExtension.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = VpnExtension.entitlements; sourceTree = "<group>"; };
+		71BB13C82F424E5DBAA941CB /* CDVDevice.m */ = {isa = PBXFileReference; name = "CDVDevice.m"; path = "cordova-plugin-device/CDVDevice.m"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; explicitFileType = undefined; includeInIndex = 0; };
+		0107E2CAEB4B4E8AB64B9DA4 /* CDVDevice.h */ = {isa = PBXFileReference; name = "CDVDevice.h"; path = "cordova-plugin-device/CDVDevice.h"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -178,6 +181,8 @@
 				AA09EA80E0C54DFFB24A1810 /* OutlinePlugin.swift */,
 				469466FF1BDB44C081741BF5 /* CDVClipboard.m */,
 				19209C3AABCC45AB8CFDD974 /* CDVClipboard.h */,
+				71BB13C82F424E5DBAA941CB /* CDVDevice.m */,
+				0107E2CAEB4B4E8AB64B9DA4 /* CDVDevice.h */,
 			);
 			name = Plugins;
 			path = Outline/Plugins;
@@ -385,7 +390,7 @@
 		70BD681B18FFB02D00A1EFCF /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0920;
+				LastSwiftUpdateCheck = 920;
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = __CDV_ORGANIZATION_NAME__;
 				TargetAttributes = {
@@ -534,6 +539,7 @@
 				737FCE3329B34151A67331B4 /* OutlinePlugin.swift in Sources */,
 				FC7D56051F86969E00ABD5CA /* EventMonitor.swift in Sources */,
 				DBBA975361C94599B9DD3891 /* CDVClipboard.m in Sources */,
+				46F44190008C45AF92173F22 /* CDVDevice.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
