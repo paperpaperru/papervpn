@@ -105,14 +105,7 @@
         <icon src="resources/icons/ios/icon-76.png" width="76" height="76" />
         <icon src="resources/icons/ios/icon-76@2x.png" width="152" height="152" />
         <!-- macOS (Catalyst) -->
-        <icon src="resources/icons/ios/icon-24.png" width="24" height="24" />
         <icon src="resources/icons/ios/icon-24@2x.png" width="48" height="48" />
-        <icon src="resources/icons/ios/icon-16.png" width="16" height="16" />
-        <icon src="resources/icons/ios/icon-16@2x.png" width="32" height="32" />
-        <icon src="resources/icons/ios/icon-32@2x.png" width="64" height="64" />
-        <icon src="resources/icons/ios/icon-128.png" width="128" height="128" />
-        <icon src="resources/icons/ios/icon-128@2x.png" width="256" height="256" />
-        <icon src="resources/icons/ios/icon-512.png" width="512" height="512" />
         <!-- App Store -->
         <icon src="resources/icons/ios/icon-1024.png" width="1024" height="1024" />
         <!-- Spotlight iPhone, iPad -->
