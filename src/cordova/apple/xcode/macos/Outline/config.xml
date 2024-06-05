@@ -6,6 +6,9 @@
     <feature name="Device">
         <param name="ios-package" value="CDVDevice" />
     </feature>
+    <feature name="Device">
+        <param name="ios-package" value="Device" />
+    </feature>
     <feature name="OutlinePlugin">
         <param name="ios-package" value="OutlinePlugin" />
         <param name="onload" value="true" />
