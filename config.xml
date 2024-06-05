@@ -14,7 +14,7 @@
   limitations under the License.
 -->
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="org.outline.android.client" version="0.0.0-debug" android-versionCode="1" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="io.papervpn.client" version="0.0.0-debug" android-versionCode="1" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>PaperVPN</name>
     <description>
         Internet without borders (powered by Shadowsocks)
@@ -84,6 +84,7 @@
         <preference name="StatusBarOverlaysWebView" value="false" />
         <preference name="StatusBarBackgroundColor" value="#263238" />
         <preference name="StatusBarStyle" value="lightcontent" />
+        <preference name="AllowInlineMediaPlayback" value="true" />
 
         <!-- https://github.com/apache/cordova-plugin-splashscreen#launch-storyboard-images -->
         <splash src="resources/splashscreen/ios/splashscreen@2x~universal~anyany.png" />
@@ -104,14 +105,7 @@
         <icon src="resources/icons/ios/icon-76.png" width="76" height="76" />
         <icon src="resources/icons/ios/icon-76@2x.png" width="152" height="152" />
         <!-- macOS (Catalyst) -->
-        <icon src="resources/icons/ios/icon-24.png" width="24" height="24" />
         <icon src="resources/icons/ios/icon-24@2x.png" width="48" height="48" />
-        <icon src="resources/icons/ios/icon-16.png" width="16" height="16" />
-        <icon src="resources/icons/ios/icon-16@2x.png" width="32" height="32" />
-        <icon src="resources/icons/ios/icon-32@2x.png" width="64" height="64" />
-        <icon src="resources/icons/ios/icon-128.png" width="128" height="128" />
-        <icon src="resources/icons/ios/icon-128@2x.png" width="256" height="256" />
-        <icon src="resources/icons/ios/icon-512.png" width="512" height="512" />
         <!-- App Store -->
         <icon src="resources/icons/ios/icon-1024.png" width="1024" height="1024" />
         <!-- Spotlight iPhone, iPad -->
