@@ -19,6 +19,10 @@
             {
               "xml": "<feature name=\"Clipboard\"><param name=\"ios-package\" value=\"CDVClipboard\" /></feature>",
               "count": 1
+            },
+            {
+              "xml": "<feature name=\"Device\"><param name=\"ios-package\" value=\"Device\" /></feature>",
+              "count": 1
             }
           ]
         }
@@ -28,7 +32,8 @@
   "installed_plugins": {
     "cordova-plugin-outline": {},
     "cordova-plugin-clipboard": {},
-    "cordova-webintent": {}
+    "cordova-webintent": {},
+    "cordova-plugin-device": {}
   },
   "dependent_plugins": {},
   "modules": [
@@ -47,11 +52,20 @@
       "clobbers": [
         "WebIntent"
       ]
+    },
+    {
+      "id": "cordova-plugin-device.device",
+      "file": "plugins/cordova-plugin-device/www/device.js",
+      "pluginId": "cordova-plugin-device",
+      "clobbers": [
+        "device"
+      ]
     }
   ],
   "plugin_metadata": {
     "cordova-plugin-outline": "0.0.0",
     "cordova-plugin-clipboard": "2.0.0",
-    "cordova-webintent": "2.0.0"
+    "cordova-webintent": "2.0.0",
+    "cordova-plugin-device": "2.1.0.1"
   }
 }
