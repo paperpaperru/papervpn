@@ -43,11 +43,25 @@ export function getAppPath() {
   return electronAppPath;
 }
 
-export function pathToEmbeddedTun2socksBinary() {
+export function pathToEmbeddedTun2socksBinary(tunnelType: string) {
   return path.join(
     unpackedAppPath(), 'client', 'output', 'build',
     (isWindows ? 'windows' : 'linux'),
-    'tun2socks' + (isWindows ? '.exe' : ''));
+    (tunnelType === 'ss' ? 'tun2shadowsocks' : 'tun2socks') + (isWindows ? '.exe' : ''));
+}
+
+export function pathToEmbeddedXrayBinary() {
+  return path.join(
+    unpackedAppPath(), 'client', 'output', 'build',
+    (isWindows ? 'windows' : 'linux'),
+    'xray' + (isWindows ? '.exe' : ''));
+}
+
+export function pathToXrayConfigJson() {
+  return path.join(
+    unpackedAppPath(), 'client', 'output', 'build',
+    (isWindows ? 'windows' : 'linux'),
+    'config' + (isWindows ? '.json' : ''));
 }
 
 /**

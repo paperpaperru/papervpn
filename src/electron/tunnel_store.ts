@@ -15,12 +15,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ShadowsocksSessionConfig} from '../../client/src/www/app/tunnel';
+import {ShadowsocksSessionConfig, XraySessionConfig} from '../../client/src/www/app/tunnel';
 
 // Format to store a tunnel configuration.
 export interface SerializableTunnel {
   id: string;
-  config: ShadowsocksSessionConfig;
+  config: ShadowsocksSessionConfig | XraySessionConfig;
+  tunnelType: string;
 }
 
 // Persistence layer for a single SerializableTunnel.
@@ -89,9 +90,20 @@ export class TunnelStore {
   // Returns whether `tunnel` and its configuration contain all the required fields.
   private isTunnelValid(tunnel: SerializableTunnel) {
     const config = tunnel.config;
+    const tunnelType = tunnel.tunnelType;
     if (!config || !tunnel.id) {
       return false;
     }
-    return config.method && config.password && config.host && config.port;
+    if (tunnelType === `ss`) {
+      const ssConfig = config as ShadowsocksSessionConfig;
+      return ssConfig.method 
+      && ssConfig.password 
+      && ssConfig.host 
+      && ssConfig.port;
+    } else if (tunnelType === `xray`) {
+      const xrayConfig = JSON.parse((config as XraySessionConfig).xrayConfig as string);
+      return xrayConfig.inbounds[0].listen 
+      && xrayConfig.inbounds[0].port;
+    }
   }
 }

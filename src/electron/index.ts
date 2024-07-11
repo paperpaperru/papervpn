@@ -30,7 +30,7 @@ import {GoVpnTunnel} from './go_vpn_tunnel';
 import {installRoutingServices, RoutingDaemon} from './routing_service';
 import {TunnelStore, SerializableTunnel} from './tunnel_store';
 import {VpnTunnel} from './vpn_tunnel';
-import {TunnelStatus} from '../../client/src/www/app/tunnel';
+import {TunnelStatus, XraySessionConfig} from '../../client/src/www/app/tunnel';
 import {ShadowsocksSessionConfig} from '../../client/src/www/app/tunnel';
 import * as errors from '../../client/src/www/model/errors';
 
@@ -298,20 +298,24 @@ async function tearDownAutoLaunch() {
 
 // Factory function to create a VPNTunnel instance backed by a network statck
 // specified at build time.
-function createVpnTunnel(config: ShadowsocksSessionConfig, isAutoConnect: boolean): VpnTunnel {
+function createVpnTunnel(
+  config: ShadowsocksSessionConfig | XraySessionConfig,
+  isAutoConnect: boolean,
+  tunnelType: string
+): VpnTunnel {
   const routing = new RoutingDaemon(config.host || '', isAutoConnect);
-  const tunnel = new GoVpnTunnel(routing, config);
+  const tunnel = new GoVpnTunnel(routing, config, tunnelType);
   routing.onNetworkChange = tunnel.networkChanged.bind(tunnel);
   return tunnel;
 }
 
 // Invoked by both the start-proxying event handler and auto-connect.
-async function startVpn(config: ShadowsocksSessionConfig, id: string, isAutoConnect = false) {
+async function startVpn(config: ShadowsocksSessionConfig | XraySessionConfig, id: string, isAutoConnect = false, tunnelType: string) {
   if (currentTunnel) {
     throw new Error('already connected');
   }
 
-  currentTunnel = createVpnTunnel(config, isAutoConnect);
+  currentTunnel = createVpnTunnel(config, isAutoConnect, tunnelType);
   if (debugMode) {
     currentTunnel.enableDebugMode();
   }
@@ -419,18 +423,20 @@ function main() {
       console.info(`was connected at shutdown, reconnecting to ${tunnelAtShutdown.id}`);
       setUiTunnelStatus(TunnelStatus.RECONNECTING, tunnelAtShutdown.id);
       try {
-        await startVpn(tunnelAtShutdown.config, tunnelAtShutdown.id, true);
+        await startVpn(tunnelAtShutdown.config, tunnelAtShutdown.id, true, tunnelAtShutdown.tunnelType);
         console.log(`reconnected to ${tunnelAtShutdown.id}`);
       } catch (e) {
         console.error(`could not reconnect: ${e.name} (${e.message})`);
       }
     }
 
-    if (!debugMode) {
-      checkForUpdates();
-      // Check every six hours
-      setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
-    }
+    // Because of this path the app freezes on Windows, but it's useless now, because we don't have any updates
+    
+    /* if (!debugMode) {
+    //   checkForUpdates();
+    //   // Check every six hours
+    //   setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
+     } */
   });
 
   app.on('second-instance', (event: Event, argv: string[]) => {
@@ -455,7 +461,7 @@ function main() {
   // TODO: refactor channel name and namespace to a constant
   ipcMain.handle(
     'outline-ipc-start-proxying',
-    async (_, args: {config: ShadowsocksSessionConfig; id: string}): Promise<errors.ErrorCode> => {
+    async (_, args: {config: ShadowsocksSessionConfig | XraySessionConfig; id: string, tunnelType: string}): Promise<errors.ErrorCode> => {
       // TODO: Rather than first disconnecting, implement a more efficient switchover (as well as
       //       being faster, this would help prevent traffic leaks - the Cordova clients already do
       //       this).
@@ -473,8 +479,7 @@ function main() {
         // host (e.g. "<host>/32"), therefore <host> must be an IP address.
         // TODO: make sure we resolve it in the native code
         args.config.host = await lookupIp(args.config.host || '');
-
-        await startVpn(args.config, args.id);
+        await startVpn(args.config, args.id, undefined, args.tunnelType);
         console.log(`connected to ${args.id}`);
         await setupAutoLaunch(args);
         // Auto-connect requires IPs; the hostname in here has already been resolved (see above).

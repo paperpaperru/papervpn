@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import * as fs from 'fs';
 import {platform} from 'os';
 
 import {powerMonitor} from 'electron';
@@ -19,8 +20,8 @@ import {powerMonitor} from 'electron';
 import {ChildProcessHelper, ProcessTerminatedExitCodeError, ProcessTerminatedSignalError} from './process';
 import {RoutingDaemon} from './routing_service';
 import {VpnTunnel} from './vpn_tunnel';
-import {pathToEmbeddedTun2socksBinary} from '../../client/infrastructure/electron/app_paths';
-import {ShadowsocksSessionConfig} from '../../client/src/www/app/tunnel';
+import {pathToEmbeddedTun2socksBinary, pathToEmbeddedXrayBinary, pathToXrayConfigJson} from '../../client/infrastructure/electron/app_paths';
+import {ShadowsocksSessionConfig, XraySessionConfig} from '../../client/src/www/app/tunnel';
 import {TunnelStatus} from '../../client/src/www/app/tunnel';
 import {ErrorCode, fromErrorCode, UnexpectedPluginError} from '../../client/src/www/model/errors';
 
@@ -55,6 +56,8 @@ export class GoVpnTunnel implements VpnTunnel {
 
   private isUdpEnabled = false;
 
+  private tunnelType: string;
+
   private readonly onAllHelpersStopped: Promise<void>;
   private resolveAllHelpersStopped: () => void;
 
@@ -62,8 +65,13 @@ export class GoVpnTunnel implements VpnTunnel {
 
   private reconnectedListener?: () => void;
 
-  constructor(private readonly routing: RoutingDaemon, private config: ShadowsocksSessionConfig) {
-    this.tun2socks = new GoTun2socks(config);
+  constructor(
+    private readonly routing: RoutingDaemon,
+    private config: ShadowsocksSessionConfig | XraySessionConfig,
+    tunnelType: string
+  ) {
+    this.tun2socks = new GoTun2socks(config, tunnelType);
+    this.tunnelType = tunnelType;
 
     // This promise, tied to both helper process' exits, is key to the instance's
     // lifecycle:
@@ -98,12 +106,15 @@ export class GoVpnTunnel implements VpnTunnel {
     });
 
     if (checkProxyConnectivity) {
-      this.isUdpEnabled = await checkConnectivity(this.config);
+      this.isUdpEnabled = await checkConnectivity(this.config, this.tunnelType);
     }
     console.log(`UDP support: ${this.isUdpEnabled}`);
 
     // Don't await here because we want to launch both binaries
-    this.tun2socks.start(this.isUdpEnabled);
+    this.tun2socks.startTun2socks(this.isUdpEnabled);
+    if (this.tunnelType === 'xray') {
+      this.tun2socks.startXray();
+    }
 
     console.log('starting routing daemon');
     await this.routing.start();
@@ -129,7 +140,10 @@ export class GoVpnTunnel implements VpnTunnel {
 
   private async suspendListener() {
     // Preemptively stop tun2socks to avoid a silent restart that will fail.
-    await this.tun2socks.stop();
+    await this.tun2socks.stopTun2socks();
+    if (this.tunnelType === 'xray') {
+      await this.tun2socks.stopXray();
+    }
     console.log('stopped tun2socks in preparation for suspend');
   }
 
@@ -141,7 +155,10 @@ export class GoVpnTunnel implements VpnTunnel {
     }
 
     console.log('restarting tun2socks after resume');
-    this.tun2socks.start(this.isUdpEnabled);
+    this.tun2socks.startTun2socks(this.isUdpEnabled);
+    if (this.tunnelType === 'xray') {
+      this.tun2socks.startXray();
+    }
 
     // Check if UDP support has changed; if so, silently restart.
     this.updateUdpSupport();
@@ -150,7 +167,7 @@ export class GoVpnTunnel implements VpnTunnel {
   private async updateUdpSupport() {
     const wasUdpEnabled = this.isUdpEnabled;
     try {
-      this.isUdpEnabled = await checkConnectivity(this.config);
+      this.isUdpEnabled = await checkConnectivity(this.config, this.tunnelType);
     } catch (e) {
       console.error(`connectivity check failed: ${e}`);
       return;
@@ -162,8 +179,14 @@ export class GoVpnTunnel implements VpnTunnel {
     console.log(`UDP support change: now ${this.isUdpEnabled}`);
 
     // Restart tun2socks.
-    await this.tun2socks.stop();
-    this.tun2socks.start(this.isUdpEnabled);
+    await this.tun2socks.stopTun2socks();
+    if (this.tunnelType === 'xray') {
+      await this.tun2socks.stopXray();
+    }
+    this.tun2socks.startTun2socks(this.isUdpEnabled);
+    if (this.tunnelType === 'xray') {
+      this.tun2socks.startXray();
+    }
   }
 
   // Use #onceDisconnected to be notified when the tunnel terminates.
@@ -178,7 +201,10 @@ export class GoVpnTunnel implements VpnTunnel {
     }
 
     try {
-      await this.tun2socks.stop();
+      await this.tun2socks.stopTun2socks();
+      if (this.tunnelType === 'xray') {
+        await this.tun2socks.stopXray();
+      }
     } catch (e) {
       if (!(e instanceof ProcessTerminatedSignalError)) {
         console.error(`could not stop tun2socks: ${e.message}`);
@@ -219,13 +245,17 @@ export class GoVpnTunnel implements VpnTunnel {
 // and relays it to a Shadowsocks proxy server.
 class GoTun2socks {
   private stopRequested = false;
-  private readonly process: ChildProcessHelper;
+  private readonly tun2socksProcess: ChildProcessHelper;
+  private readonly xrayProcess: ChildProcessHelper;
+  private readonly tunnelType: string;
 
-  constructor(private readonly config: ShadowsocksSessionConfig) {
-    this.process = new ChildProcessHelper(pathToEmbeddedTun2socksBinary());
+  constructor(private readonly config: ShadowsocksSessionConfig | XraySessionConfig, tunnelType: string) {
+    this.tunnelType = tunnelType;
+    this.tun2socksProcess = new ChildProcessHelper(pathToEmbeddedTun2socksBinary(this.tunnelType));
+    this.xrayProcess = new ChildProcessHelper(pathToEmbeddedXrayBinary());
   }
 
-  async start(isUdpEnabled: boolean): Promise<void> {
+  async startTun2socks(isUdpEnabled: boolean): Promise<void> {
     // ./tun2socks.exe \
     //   -tunName outline-tap0 -tunDNS 1.1.1.1,9.9.9.9 \
     //   -tunAddr 10.0.85.2 -tunGw 10.0.85.1 -tunMask 255.255.255.0 \
@@ -237,13 +267,21 @@ class GoTun2socks {
     args.push('-tunAddr', TUN2SOCKS_TAP_DEVICE_IP);
     args.push('-tunGw', TUN2SOCKS_VIRTUAL_ROUTER_IP);
     args.push('-tunMask', TUN2SOCKS_VIRTUAL_ROUTER_NETMASK);
-    args.push('-tunDNS', DNS_RESOLVERS.join(','));
-    args.push('-proxyHost', this.config.host || '');
-    args.push('-proxyPort', `${this.config.port}`);
-    args.push('-proxyPassword', this.config.password || '');
-    args.push('-proxyCipher', this.config.method || '');
-    args.push('-proxyPrefix', this.config.prefix || '');
-    args.push('-logLevel', this.process.isDebugModeEnabled ? 'debug' : 'info');
+    
+    if (this.tunnelType === 'ss') {      
+      args.push('-tunDNS', DNS_RESOLVERS.join(','));
+      args.push('-proxyHost', (this.config as ShadowsocksSessionConfig).host || '');
+      args.push('-proxyPort', `${(this.config as ShadowsocksSessionConfig).port}`);
+      args.push('-proxyPassword', (this.config as ShadowsocksSessionConfig).password || '');
+      args.push('-proxyCipher', (this.config as ShadowsocksSessionConfig).method || '');
+      args.push('-proxyPrefix', (this.config as ShadowsocksSessionConfig).prefix || '');
+      args.push('-logLevel', this.tun2socksProcess.isDebugModeEnabled ? 'debug' : 'info');
+    } else if (this.tunnelType === 'xray') {
+      args.push('-loglevel', this.tun2socksProcess.isDebugModeEnabled ? 'debug' : 'info');
+
+      const xrayConfig = JSON.parse((this.config as XraySessionConfig).xrayConfig as string);
+      args.push('-proxyServer', `${xrayConfig.inbounds[0].listen}:${xrayConfig.inbounds[0].port}`);
+    }
     if (!isUdpEnabled) {
       args.push('-dnsFallback');
     }
@@ -255,15 +293,15 @@ class GoTun2socks {
         console.warn(`tun2socks exited unexpectedly. Restarting...`);
       }
       autoRestart = false;
-      this.process.onStdErr = (data?: string | Buffer) => {
+      this.tun2socksProcess.onStdErr = (data?: string | Buffer) => {
         if (data?.toString().includes('tun2socks running')) {
           console.debug('tun2socks started');
           autoRestart = true;
-          this.process.onStdErr = undefined;
+          this.tun2socksProcess.onStdErr = undefined;
         }
       };
       try {
-        await this.process.launch(args);
+        await this.tun2socksProcess.launch(args);
         console.info('tun2socks exited with no errors');
       } catch (e) {
         console.error(`tun2socks terminated due to ${e}`);
@@ -271,9 +309,53 @@ class GoTun2socks {
     } while (!this.stopRequested && autoRestart);
   }
 
-  stop() {
+  async startXray(): Promise<void> {
+    // ./xray.exe \
+    this.stopRequested = false;
+    let autoRestart = false;
+    do {
+      if (autoRestart) {
+        console.warn(`xray exited unexpectedly. Restarting...`);
+      }
+      autoRestart = false;
+      this.xrayProcess.onStdErr = (data?: string | Buffer) => {
+        if (data?.toString().includes('xray running')) {
+          console.debug('xray started');
+          autoRestart = true;
+          this.xrayProcess.onStdErr = undefined;
+        }
+      };
+      this.saveXrayConfigToJsonFile(JSON.stringify(this.config), pathToXrayConfigJson())
+      try {
+        await this.xrayProcess.launch([]);
+        console.info('xray exited with no errors');
+      } catch (e) {
+        console.error(`xray terminated due to ${e}`);
+      }
+    } while (!this.stopRequested && autoRestart);
+  }
+
+  saveXrayConfigToJsonFile(jsonString: string, filePath: string) {
+    const jsonObject = JSON.parse(jsonString);
+    if (!jsonObject.xrayConfig) {
+      return;
+    } else {
+      try {
+        const jsonFormattedString = JSON.stringify(JSON.parse(jsonObject.xrayConfig), null, 2);
+        fs.writeFileSync(filePath, jsonFormattedString, 'utf8');
+      } catch (e) {
+        console.error(`failed to save xray config to file: ${e}`);
+      }
+    }
+  }
+
+  stopTun2socks() {
     this.stopRequested = true;
-    return this.process.stop();
+    return this.tun2socksProcess.stop();
+  }
+
+  stopXray() {
+    return this.xrayProcess.stop();
   }
 
   /**
@@ -283,23 +365,27 @@ class GoTun2socks {
    */
   checkConnectivity() {
     console.debug('using tun2socks to check connectivity');
-    return this.process.launch([
-      '-proxyHost',
-      this.config.host || '',
-      '-proxyPort',
-      `${this.config.port}`,
-      '-proxyPassword',
-      this.config.password || '',
-      '-proxyCipher',
-      this.config.method || '',
-      '-proxyPrefix',
-      this.config.prefix || '',
-      '-checkConnectivity',
-    ]);
+    if (this.tunnelType === 'ss') {
+      return this.tun2socksProcess.launch([
+        '-proxyHost',
+        (this.config as ShadowsocksSessionConfig).host || '',
+        '-proxyPort',
+        `${(this.config as ShadowsocksSessionConfig).port}`,
+        '-proxyPassword',
+        (this.config as ShadowsocksSessionConfig).password || '',
+        '-proxyCipher',
+        (this.config as ShadowsocksSessionConfig).method || '',
+        '-proxyPrefix',
+        (this.config as ShadowsocksSessionConfig).prefix || '',
+        '-checkConnectivity',
+      ]);
+    } else if (this.tunnelType === 'xray') {
+      return true;
+    }
   }
 
   enableDebugMode() {
-    this.process.isDebugModeEnabled = true;
+    this.tun2socksProcess.isDebugModeEnabled = true;
   }
 }
 
@@ -307,9 +393,9 @@ class GoTun2socks {
 // `config`. Checks whether proxy server is reachable, whether the network and proxy support UDP
 // forwarding and validates the proxy credentials. Resolves with a boolean indicating whether UDP
 // forwarding is supported. Throws if the checks fail or if the process fails to start.
-async function checkConnectivity(config: ShadowsocksSessionConfig) {
+async function checkConnectivity(config: ShadowsocksSessionConfig | XraySessionConfig, tunnelType: string) {
   try {
-    await new GoTun2socks(config).checkConnectivity();
+    await new GoTun2socks(config, tunnelType).checkConnectivity();
     return true;
   } catch (e) {
     console.error(`connectivity check error: ${e}`);
