@@ -201,7 +201,7 @@ export class GoVpnTunnel implements VpnTunnel {
     }
 
     try {
-      await this.tun2socks.stopTun2socks();
+      this.tun2socks.stopTun2socks();
       if (this.tunnelType === 'xray') {
         await this.tun2socks.stopXray();
       }
