@@ -17,12 +17,16 @@
 const $_documentContainer = document.createElement('template');
 
 $_documentContainer.innerHTML = `<iron-iconset-svg name="outline-icons" size="24">
-  <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
-    <g id="outline">
-      <path d="M23.9,10.7c-0.6-5.4-4.8-9.6-10.1-10.2v4.7c3.7,0.7,6.1,4.2,5.5,7.9c-0.5,2.8-2.7,5.1-5.5,5.6v4.7
-        C20.1,22.6,24.6,17,23.9,10.7z"></path>
-      <path d="M0.1,13.1c0.6,5.4,4.8,9.6,10.1,10.2v-4v-0.6V5.2V3.9V0.5C4,1.3-0.5,6.9,0.1,13.1z"></path>
+  <svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g id="outline" clip-path="url(#clip0_292_164)">
+      <circle cx="320" cy="320" r="320" fill="#262823"/>
+      <path d="M239.764 374.71H376.523C446.7 374.71 503.745 327.032 503.745 268.482C503.745 209.931 446.7 162.253 376.523 162.253H177.617V486.458H239.764V374.71ZM437.081 268.482C437.081 295.331 409.897 317.246 376.523 317.246H239.764V219.717H376.523C409.897 219.717 437.081 241.548 437.081 268.482Z" fill="#AEFF58"/>
     </g>
+    <defs>
+    <clipPath id="clip0_292_164">
+      <rect width="640" height="640" fill="white"/>
+    </clipPath>
+    </defs>
   </svg>
 </iron-iconset-svg>`;
 

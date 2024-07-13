@@ -84,6 +84,9 @@ Polymer({
       }
     </style>
 
+    <!--
+    TODO: This "tips"-template sometimes shows in the background. Need to find when it shows and fix it.
+    -->
     <div id="wrapper">
       <div id="content">
         <div id="tips"><iron-icon icon="icons:lightbulb-outline"></iron-icon>[[localize(iconTextLocalizationKey)]]</div>
