@@ -1,7 +1,7 @@
 {
   "files": ["build/electron", "client/www", "client/resources/tray", "!node_modules/electron"],
   "asarUnpack": ["client"],
-  "artifactName": "Outline-Client.${ext}",
+  "artifactName": "PaperVPN-Client.${ext}",
   "directories": {
     "output": "output/build/dist"
   },
@@ -24,7 +24,8 @@
     "files": ["client/output/build/windows"],
     "icon": "build/icons/win/icon.ico",
     "sign": "src/electron/windows/electron_builder_signing_plugin.cjs",
-    "signingHashAlgorithms": ["sha256"]
+    "signingHashAlgorithms": ["sha256"],
+    "requestedExecutionLevel": "requireAdministrator"
   },
   "nsis": {
     "perMachine": true,
