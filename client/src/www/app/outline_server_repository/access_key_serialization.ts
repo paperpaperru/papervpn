@@ -83,7 +83,11 @@ function parseXraySessionConfigJson(responseBody: string): XraySessionConfig | n
 export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
   let response;
   try {
-    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
+    const options: any = {
+      cache: 'no-store',
+      redirect: 'follow',
+    }
+    response = await fetch(configLocation, options);
   } catch (cause) {
     throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
   }
@@ -111,7 +115,14 @@ export async function fetchXraySessionConfig(configLocation: URL): Promise<XrayS
   let response;
   try {
     configLocation = new URL(configLocation.toString().replace('xray', 'https'));
-    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
+    const options: any = {
+      cache: 'no-store',
+      redirect: 'follow',
+      headers: {
+        'Accept': 'application/json',
+      }
+    }
+    response = await fetch(configLocation, options);
   } catch (cause) {
     throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
   }
