@@ -13,7 +13,7 @@ export async function main(srcDirs, destDir) {
 
         const stat = await fs.stat(srcFile);
 
-        if (stat.isFile()) {
+        if (stat.isFile() && !file.endsWith('README.md')) {
           await fs.copyFile(srcFile, destFile);
           console.log(`${srcFile} is copied to ${destFile}`);
         } else if (stat.isDirectory()) {

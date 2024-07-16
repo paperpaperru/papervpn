@@ -201,7 +201,7 @@ export class GoVpnTunnel implements VpnTunnel {
     }
 
     try {
-      await this.tun2socks.stopTun2socks();
+      this.tun2socks.stopTun2socks();
       if (this.tunnelType === 'xray') {
         await this.tun2socks.stopXray();
       }
@@ -311,7 +311,6 @@ class GoTun2socks {
 
   async startXray(): Promise<void> {
     // ./xray.exe \
-    this.stopRequested = false;
     let autoRestart = false;
     do {
       if (autoRestart) {
@@ -343,6 +342,7 @@ class GoTun2socks {
       try {
         const jsonFormattedString = JSON.stringify(JSON.parse(jsonObject.xrayConfig), null, 2);
         fs.writeFileSync(filePath, jsonFormattedString, 'utf8');
+        console.debug(`xray config successfully saved to file: ${filePath}`);
       } catch (e) {
         console.error(`failed to save xray config to file: ${e}`);
       }
@@ -380,6 +380,7 @@ class GoTun2socks {
         '-checkConnectivity',
       ]);
     } else if (this.tunnelType === 'xray') {
+      console.debug('Xray tunnel so skip check connectivity, return true');
       return true;
     }
   }
