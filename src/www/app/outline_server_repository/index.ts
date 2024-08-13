@@ -23,8 +23,6 @@ import {TunnelFactory} from '../tunnel';
 
 import {OutlineServer} from './server';
 import {staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
-import {SsOutlineServer} from "./ss_server";
-import {XrayOutlineServer} from "./xray_server";
 
 // TODO(daniellacosse): write unit tests for these functions
 
@@ -207,7 +205,7 @@ export class OutlineServerRepository implements ServerRepository {
     if (config.host.isIPv6) {
       throw new errors.ServerIncompatible('unsupported IPv6 host address');
     }
-    if (!SsOutlineServer.isServerCipherSupported(config.method.data)) {
+    if (!OutlineServer.isServerCipherSupported(config.method.data)) {
       throw new errors.ShadowsocksUnsupportedCipher(config.method.data || 'unknown');
     }
   }
@@ -306,27 +304,14 @@ export class OutlineServerRepository implements ServerRepository {
   }
 
   private createServer(id: string, accessKey: string, name?: string): OutlineServer {
-    let server: OutlineServer
-    if ( accessKey.startsWith('ss') || accessKey.startsWith('https') ) {
-      server = new SsOutlineServer(
-          id,
-          accessKey,
-          isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
-          name,
-          this.createTunnel(id),
-          this.eventQueue
-      );
-    }
-    else {
-      server = new XrayOutlineServer(
-          id,
-          accessKey,
-          ServerType.DYNAMIC_CONNECTION,
-          name,
-          this.createTunnel(id),
-          this.eventQueue
-      );
-    }
+    const server = new OutlineServer(
+        id,
+        accessKey,
+        isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
+        name,
+        this.createTunnel(id),
+        this.eventQueue
+    );
 
 
     try {

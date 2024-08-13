@@ -36,13 +36,15 @@ export function staticKeyToShadowsocksSessionConfig(staticKey: string): Shadowso
   }
 }
 
-function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSessionConfig | null {
-  const responseJson = JSON.parse(responseBody);
+interface ShadowsocksServerConfig {
+  method: string,
+  password: string,
+  server: string,
+  server_port: number,
+  prefix: string
+}
 
-  if ('error' in responseJson) {
-    throw new errors.SessionConfigError(responseJson.error.message);
-  }
-
+function parseShadowsocksSessionConfigJson(responseJson: ShadowsocksServerConfig): ShadowsocksSessionConfig | null {
   const {method, password, server, server_port, prefix} = responseJson;
 
   // These are the mandatory keys.
@@ -67,9 +69,25 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
   };
 }
 
-function parseXraySessionConfigJson(responseBody: string): XraySessionConfig | null {
-  const responseJson = JSON.parse(responseBody);
-  
+interface VlessNode {
+  address: string
+}
+interface Settings {
+  vnext: VlessNode[]
+}
+interface Outbound {
+  settings: Settings
+}
+interface Inbound {
+  host: string,
+  port: number
+}
+interface XrayServerConfig {
+  outbounds: Outbound[],
+  inbounds: Inbound[]
+}
+
+function parseXraySessionConfigJson(responseJson: XrayServerConfig): XraySessionConfig | null {
   const host: string = responseJson.outbounds[0].settings.vnext[0].address;
   responseJson.inbounds[0].port = 12080
 
@@ -81,7 +99,10 @@ function parseXraySessionConfigJson(responseBody: string): XraySessionConfig | n
 
 // fetches information from a dynamic access key and attempts to parse it
 // TODO(daniellacosse): unit tests
-export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
+export async function fetchSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig|XraySessionConfig> {
+  const fixedConfigLocation = configLocation.toString().replace('^xray:', 'https:');
+  configLocation = new URL(fixedConfigLocation);
+  configLocation.searchParams.append('type', '1')
   let response;
   try {
     response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
@@ -95,34 +116,26 @@ export async function fetchShadowsocksSessionConfig(configLocation: URL): Promis
     if (responseBody.startsWith('ss://')) {
       return staticKeyToShadowsocksSessionConfig(responseBody);
     }
+    else {
+      const responseJson = JSON.parse(responseBody);
 
-    return parseShadowsocksSessionConfigJson(responseBody);
+      if ('error' in responseJson) {
+        throw new errors.SessionConfigError(responseJson.error.message);
+      }
+
+      if ( 'method' in responseJson ) {
+        return parseShadowsocksSessionConfigJson(responseJson);
+      }
+      else {
+        return parseXraySessionConfigJson(responseJson);
+      }
+    }
+
   } catch (cause) {
     if (cause instanceof errors.SessionConfigError) {
       throw cause;
     }
 
-    throw new errors.ServerAccessKeyInvalid('Failed to parse VPN information fetched from dynamic access key.', {
-      cause,
-    });
-  }
-}
-
-export async function fetchXraySessionConfig(configLocation: URL): Promise<XraySessionConfig> {
-  let response;
-  try {
-    configLocation = new URL(configLocation.toString().replace('xray', 'https'));
-    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
-  } catch (cause) {
-    throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
-  }
-  const responseBody = (await response.text()).trim();
-  try {
-    return parseXraySessionConfigJson(responseBody);
-  } catch (cause) {
-    if (cause instanceof errors.SessionConfigError) {
-      throw cause;
-    }
     throw new errors.ServerAccessKeyInvalid('Failed to parse VPN information fetched from dynamic access key.', {
       cause,
     });
