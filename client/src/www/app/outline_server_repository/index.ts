@@ -15,13 +15,14 @@
 import {makeConfig, SHADOWSOCKS_URI, SIP002_URI} from 'ShadowsocksConfig';
 import uuidv4 from 'uuidv4';
 
-import {staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
-import {OutlineServer} from './server';
 import * as errors from '../../model/errors';
 import * as events from '../../model/events';
 import {ServerRepository, ServerType} from '../../model/server';
+
 import {TunnelFactory} from '../tunnel';
 
+import {OutlineServer} from './server';
+import {staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
 
 // TODO(daniellacosse): write unit tests for these functions
 
@@ -45,7 +46,7 @@ function staticKeysMatch(a: string, b: string): boolean {
 
 // Determines if the key is expected to be a url pointing to an ephemeral session config.
 function isDynamicAccessKey(accessKey: string): boolean {
-  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://');
+  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://') || accessKey.startsWith('xray://');
 }
 
 // NOTE: For extracting a name that the user has explicitly set, only.
@@ -304,13 +305,14 @@ export class OutlineServerRepository implements ServerRepository {
 
   private createServer(id: string, accessKey: string, name?: string): OutlineServer {
     const server = new OutlineServer(
-      id,
-      accessKey,
-      isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
-      name,
-      this.createTunnel(id),
-      this.eventQueue
+        id,
+        accessKey,
+        isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
+        name,
+        this.createTunnel(id),
+        this.eventQueue
     );
+
 
     try {
       this.validateAccessKey(accessKey);

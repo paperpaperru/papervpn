@@ -15,7 +15,8 @@
 import {SHADOWSOCKS_URI} from 'ShadowsocksConfig';
 
 import * as errors from '../../model/errors';
-import {ShadowsocksSessionConfig} from '../tunnel';
+
+import {ShadowsocksSessionConfig, XraySessionConfig} from '../tunnel';
 
 // DON'T use these methods outside of this folder!
 
@@ -35,13 +36,15 @@ export function staticKeyToShadowsocksSessionConfig(staticKey: string): Shadowso
   }
 }
 
-function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSessionConfig | null {
-  const responseJson = JSON.parse(responseBody);
+interface ShadowsocksServerConfig {
+  method: string,
+  password: string,
+  server: string,
+  server_port: number,
+  prefix: string
+}
 
-  if ('error' in responseJson) {
-    throw new errors.SessionConfigError(responseJson.error.message);
-  }
-
+function parseShadowsocksSessionConfigJson(responseJson: ShadowsocksServerConfig): ShadowsocksSessionConfig | null {
   const {method, password, server, server_port, prefix} = responseJson;
 
   // These are the mandatory keys.
@@ -66,9 +69,40 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
   };
 }
 
+interface VlessNode {
+  address: string
+}
+interface Settings {
+  vnext: VlessNode[]
+}
+interface Outbound {
+  settings: Settings
+}
+interface Inbound {
+  host: string,
+  port: number
+}
+interface XrayServerConfig {
+  outbounds: Outbound[],
+  inbounds: Inbound[]
+}
+
+function parseXraySessionConfigJson(responseJson: XrayServerConfig): XraySessionConfig | null {
+  const host: string = responseJson.outbounds[0].settings.vnext[0].address;
+  responseJson.inbounds[0].port = 12080
+
+  return {
+    xrayConfig: JSON.stringify(responseJson),
+    host: host,
+  }
+}
+
 // fetches information from a dynamic access key and attempts to parse it
 // TODO(daniellacosse): unit tests
-export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
+export async function fetchSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig|XraySessionConfig> {
+  const fixedConfigLocation = configLocation.toString().replace('^xray:', 'https:');
+  configLocation = new URL(fixedConfigLocation);
+  configLocation.searchParams.append('type', '1')
   let response;
   try {
     response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
@@ -82,8 +116,21 @@ export async function fetchShadowsocksSessionConfig(configLocation: URL): Promis
     if (responseBody.startsWith('ss://')) {
       return staticKeyToShadowsocksSessionConfig(responseBody);
     }
+    else {
+      const responseJson = JSON.parse(responseBody);
 
-    return parseShadowsocksSessionConfigJson(responseBody);
+      if ('error' in responseJson) {
+        throw new errors.SessionConfigError(responseJson.error.message);
+      }
+
+      if ( 'method' in responseJson ) {
+        return parseShadowsocksSessionConfigJson(responseJson);
+      }
+      else {
+        return parseXraySessionConfigJson(responseJson);
+      }
+    }
+
   } catch (cause) {
     if (cause instanceof errors.SessionConfigError) {
       throw cause;
