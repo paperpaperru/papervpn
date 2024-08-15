@@ -103,9 +103,14 @@ export async function fetchSessionConfig(configLocation: URL): Promise<Shadowsoc
   const fixedConfigLocation = configLocation.toString().replace('^xray:', 'https:');
   configLocation = new URL(fixedConfigLocation);
   configLocation.searchParams.append('type', '1')
+  const options: any = {
+    cache: 'no-store',
+    redirect: 'follow',
+    //headers: {'Accept': 'application/json'},
+  };
   let response;
   try {
-    response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
+    response = await fetch(configLocation, options);
   } catch (cause) {
     throw new errors.SessionConfigFetchFailed('Failed to fetch VPN information from dynamic access key.', {cause});
   }
