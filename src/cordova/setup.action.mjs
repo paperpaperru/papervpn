@@ -163,12 +163,12 @@ async function appleMacOsDebug(verbose) {
 async function setAppleVersion(platform, versionName, buildNumber) {
   await makeReplacements([
     {
-      files: `platforms/${platform}/Outline/*.plist`,
+      files: `platforms/${platform}/PaperVPN/*.plist`,
       from: /<key>CFBundleShortVersionString<\/key>\s*<string>.*<\/string>/g,
       to: `<key>CFBundleShortVersionString</key>\n  <string>${versionName}</string>`,
     },
     {
-      files: `platforms/${platform}/Outline/*.plist`,
+      files: `platforms/${platform}/PaperVPN/*.plist`,
       from: /<key>CFBundleVersion<\/key>\s*<string>.*<\/string>/g,
       to: `<key>CFBundleVersion</key>\n  <string>${buildNumber}</string>`,
     },
