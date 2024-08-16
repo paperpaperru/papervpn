@@ -95,7 +95,7 @@ Polymer({
       }
 
       a {
-        color: var(--medium-green);
+        color: var(--href-green);
         text-decoration: none;
       }
     </style>
@@ -107,11 +107,6 @@ Polymer({
         id="description"
         inner-h-t-m-l="[[localize('about-outline', 'jigsawUrl', 'https://jigsaw.google.com', 'outlineUrl', 'https://getoutline.org', 'shadowsocksUrl', 'https://shadowsocks.org', 'gitHubUrl', 'https://github.com/jigsaw-Code/?q=outline', 'redditUrl', 'https://www.reddit.com/r/outlinevpn')]]"
       ></div>
-      <div id="footer">
-        <a href="https://jigsaw.google.com">
-          <img id="jigsaw-logo" src$="[[rootPath]]assets/jigsaw-logo.png" />
-        </a>
-      </div>
     </div>
   `,
 
