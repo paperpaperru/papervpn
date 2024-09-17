@@ -216,6 +216,7 @@ const getSharedComponents = (element: ServerListItemElement & LitElement) => {
             label="${messages.connectButton}"
             @click="${dispatchers.connectToggle}"
             ?disabled=${hasErrorMessage}
+            autofocus
           >
           </mwc-button>
         </footer>

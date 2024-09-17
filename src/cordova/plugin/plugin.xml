@@ -58,6 +58,7 @@
       src="android/libs/tun2socks.aar"
       target-dir="app/src/main/libs" />
     <resource-file src="android/resources/small_icon.png" target="res/drawable/small_icon.png" />
+    <resource-file src="android/resources/banner.jpg" target="res/drawable/banner.jpg" />
     <resource-file src="android/resources/bypass_subnets.xml" target="res/values/bypass_subnets.xml" />
     <resource-file src="android/resources/strings/" target="res/" />
 
