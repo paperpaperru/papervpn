@@ -64,8 +64,10 @@ $(WINDOWS_BUILDDIR)/tun2socks.exe: $(XGO)
 
 
 $(GOMOBILE): go.mod
-	env GOBIN="$(GOBIN)" go install golang.org/x/mobile/cmd/gomobile
-	env GOBIN="$(GOBIN)" $(GOMOBILE) init
+  #env GOBIN="$(GOBIN)" go install golang.org/x/mobile/cmd/gomobile
+	#env GOBIN="$(GOBIN)" $(GOMOBILE) init
+	mkdir -p $(GOBIN)
+	cp third_party/gomobile/* $(GOBIN)
 
 $(XGO): go.mod
 	env GOBIN="$(GOBIN)" go install github.com/crazy-max/xgo
