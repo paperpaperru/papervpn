@@ -31,7 +31,7 @@ export function getBuildParameters(cliArguments) {
     _: [platform = 'browser'],
     buildMode = 'debug',
     verbose = false,
-    versionName = '0.0.0',
+    versionName = '0.1.0',
     sentryDsn = process.env.SENTRY_DSN,
   } = minimist(cliArguments);
 
