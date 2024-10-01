@@ -22,6 +22,7 @@ import * as url from 'url';
 import * as Sentry from '@sentry/electron/main';
 import autoLaunch = require('auto-launch'); // tslint:disable-line
 import {app, BrowserWindow, ipcMain, Menu, MenuItemConstructorOptions, nativeImage, shell, Tray} from 'electron';
+import contextMenu from 'electron-context-menu';
 import {autoUpdater} from 'electron-updater';
 
 
@@ -120,6 +121,9 @@ function setupTray(): void {
 
 function setupWindow(): void {
   // Create the browser window.
+  contextMenu({
+    showSelectAll: false,
+  });
   mainWindow = new BrowserWindow({
     width: 360,
     height: 640,
