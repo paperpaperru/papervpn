@@ -429,14 +429,12 @@ function main() {
         console.error(`could not reconnect: ${e.name} (${e.message})`);
       }
     }
-
-    // Because of this path the app freezes on Windows, but it's useless now, because we don't have any updates
     
-    /* if (!debugMode) {
-    //   checkForUpdates();
-    //   // Check every six hours
-    //   setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
-     } */
+    if (!debugMode) {
+      checkForUpdates();
+      // Check every six hours
+      setInterval(checkForUpdates, 6 * 60 * 60 * 1000);
+     }
   });
 
   app.on('second-instance', (event: Event, argv: string[]) => {
