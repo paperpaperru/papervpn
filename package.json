@@ -1,6 +1,6 @@
 {
-  "name": "outline-apps",
-  "productName": "Outline",
+  "name": "papervpn-client",
+  "productName": "Paper VPN",
   "scripts": {
     "action:help": "npm run action list",
     "action:list": "npm run action list",

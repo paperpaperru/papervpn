@@ -27,6 +27,7 @@ Polymer({
         color: rgba(0, 0, 0, 0.87);
         --error-color: #f44336;
         --success-color: #00bfa5;
+        font-family: var(--outline-font-family);
       }
       :host a {
         color: var(--medium-green);
@@ -43,11 +44,13 @@ Polymer({
         margin: 24px 0;
       }
       .title {
+        font-family: var(--outline-font-family);
         font-size: 20px;
         line-height: 32px;
         padding-bottom: 12px;
       }
       .faded {
+        font-family: var(--outline-font-family);
         color: rgba(0, 0, 0, 0.54);
       }
       .center {
@@ -65,6 +68,7 @@ Polymer({
       /* rtl:ignore */
       paper-input {
         margin: 24px;
+        font-family: var(--outline-font-family);
         --paper-input-container-underline: {
           display: none;
         }
@@ -110,6 +114,7 @@ Polymer({
       }
       paper-button {
         margin: 0;
+        font-family: var(--outline-font-family);
         font-weight: 500;
       }
       .button-container {
@@ -151,7 +156,9 @@ Polymer({
     <paper-dialog id="addServerSheet" with-backdrop>
       <div class="vertical-margin">
         <div class="title">[[localize('server-add-access-key')]]</div>
-        <div class="faded">[[localize('server-add-instructions')]]</div>
+        <div
+          inner-h-t-m-l="[[localize('server-add-instructions', 'breakLine', '<br/>', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html>', 'closeLink', '</a>')]]"
+        ></div>
       </div>
       <paper-input
         id="accessKeyInput"
@@ -163,6 +170,7 @@ Polymer({
         <iron-icon icon="communication:vpn-key" slot="suffix"></iron-icon>
       </paper-input>
       <div class="footer center top-divider">
+      <!--
         <template is="dom-if" if="[[shouldShowNormalAccessMessage]]">
           <div
             id="addServerFooter"
@@ -175,6 +183,7 @@ Polymer({
             inner-h-t-m-l="[[localize('server-create-your-own-access', 'breakLine', '<br/>', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/index.html>', 'openLink2', '<a href=https://www.reddit.com/r/outlinevpn/wiki/index/outline_vpn_access_keys/>', 'closeLink', '</a>')]]"
           ></div>
         </template>
+        -->
         <template is="dom-if" if="[[invalidAccessKeyInput]]">
           <div
             id="invalidAccessKeyFooter"
