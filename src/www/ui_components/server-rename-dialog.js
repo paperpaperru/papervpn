@@ -25,13 +25,16 @@ Polymer({
       mwc-textfield {
         margin-top: 0;
       }
+      paper-button:focus {
+        outline: 3px solid var(--main-green);
+      }
     </style>
     <paper-dialog id="renameDialog" with-backdrop="">
       <h3>[[localize('server-rename')]]</h3>
-      <mwc-textfield id="serverNameInput" maxlength="100" tabindex="0"></mwc-textfield>
+      <mwc-textfield id="serverNameInput" maxlength="100" tabindex="0" helper="Для выхода из редактирования два раза нажмите кнопку 'Назад'"></mwc-textfield>
       <div class="buttons">
-        <paper-button dialog-dismiss="">[[localize('cancel')]]</paper-button>
-        <paper-button dialog-confirm="" on-tap="_saveRename">[[localize('save')]]</paper-button>
+        <paper-button id="serverRenameCancelButton" dialog-dismiss="">[[localize('cancel')]]</paper-button>
+        <paper-button id="serverRenameButton" dialog-confirm="" on-tap="_saveRename">[[localize('save')]]</paper-button>
       </div>
     </paper-dialog>
   `,

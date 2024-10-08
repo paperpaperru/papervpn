@@ -150,10 +150,10 @@ export class App {
 
     this.eventQueue.startPublishing();
 
-    if (!this.arePrivacyTermsAcked()) {
-      this.displayPrivacyView();
-    }
-    this.displayZeroStateUi();
+    // if (!this.arePrivacyTermsAcked()) {
+    //   this.displayPrivacyView();
+    // }
+    // this.displayZeroStateUi();
   }
 
   showLocalizedError(error?: Error, toastDuration = 10000) {

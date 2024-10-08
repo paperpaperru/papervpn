@@ -236,6 +236,10 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           margin-left: 12px;
         }
 
+        :focus {
+          outline: 3px solid var(--main-green);
+        }
+
         @media (max-height: 480px) {
           :host {
             --app-drawer-width: 250px;
@@ -618,11 +622,45 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         readonly: true,
         value: true,
       },
+      isServerMenuFocused: Boolean,
+      isServerMenuOpen: Boolean,
+      isServerConnectButtonFocused: Boolean,
+      isServerListFocused: Boolean,
+      isAppMenuFocused: Boolean,
+      isAddServerButtonFocused: Boolean,
+      isAddServerButtonPressed: Boolean,
+      isAccessKeyInputFocused: Boolean,
+      isConfirmServerButtonFocused: Boolean,
+      isIgnoreServerButtonFocused: Boolean,
+      isServerRenameItemFocused: Boolean,
+      isServerRenameWindowOpen: Boolean,
+      isServerRenameInputFocused: Boolean,
+      isServerRenameButtonFocused: Boolean,
+      isServerRenameCancelButtonFocused: Boolean,
+      isServerForgetItemFocused: Boolean
     };
   }
 
   ready() {
     super.ready();
+    this.isServerMenuFocused = false;
+    this.isServerMenuOpen = false;
+    this.isServerConnectButtonFocused = false;
+    this.isServerListFocused = false;
+    this.isAppMenuFocused = false;
+    this.isAddServerButtonFocused = false;
+    this.isAddServerButtonPressed = false;
+    this.isAccessKeyInputFocused = false;
+    this.isConfirmServerButtonFocused = false;
+    this.isIgnoreServerButtonFocused = false;
+    this.isServerRenameItemFocused = false;
+    this.isServerRenameWindowOpen = false;
+    this.isServerRenameInputFocused = false;
+    this.isServerRenameButtonFocused = false;
+    this.isServerRenameCancelButtonFocused = false;
+    this.isServerForgetItemFocused = false;
+    window.addEventListener("keydown", this.dpadHandler.bind(this), false);
+    document.addEventListener("backbutton", this.backButtonHandler.bind(this), false);
     this.setLanguage(this.language);
 
     // Workaround for paper-behaviors' craptastic keyboard focus detection:
@@ -670,6 +708,316 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
       this.platform = cordova.platformId;
     }
   }
+
+  backButtonHandler(e) {
+    if (this.isServerMenuOpen) {
+      const serverMenuButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverMenuButton0");
+      if (serverMenuButton) {
+        serverMenuButton.click();
+        serverMenuButton.focus();
+        this.isServerMenuFocused = true;
+        this.isServerRenameItemFocused = false;
+      }
+    } else if (this.isServerRenameWindowOpen) {
+      const serverRenameButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverRenameButton");
+      if (serverRenameButton) {
+        serverRenameButton.focus();
+        this.isServerRenameButtonFocused = true;
+        this.isServerRenameInputFocused = false;
+      }
+    } else {
+      e.preventDefault();
+      window.history.back();
+    }
+  }
+
+  dpadHandler(e) {
+    switch(e.keyCode) {
+      case 13:
+        console.log('central key pressed');
+
+        this.isIgnoreServerButtonFocused = false;
+        this.isConfirmServerButtonFocused = false;
+
+        if (this.isAddServerButtonFocused) {
+          this.isAddServerButtonPressed = true;
+        }
+
+        if (this.isAppMenuFocused) {
+          const menuBtn = this.$.menuBtn;
+          if (menuBtn) {
+            menuBtn.click();
+            this.isAppMenuFocused = false;
+          }
+          break;
+        }
+
+        if (this.isServerMenuFocused) {
+          const serverMenuButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverMenuButton0");
+          if (serverMenuButton) {
+            serverMenuButton.click();
+            this.isServerMenuOpen = true;
+            this.isServerMenuFocused = false;
+          }
+          break;
+        }
+
+        if (this.isConfirmServerButtonFocused) {
+          const addServerButton = this.$.addServerView.$.addServerButton;
+          if (addServerButton) {
+            addServerButton.click();  // Установить фокус на кнопке
+            this.isConfirmServerButtonFocused = false;
+            this.isAccessKeyInputFocused = false;
+            this.isIgnoreServerButtonFocused = false;
+          }
+          break;
+        }
+
+        if (this.isServerRenameItemFocused) {
+          const serverRenameItem = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverRenameItem");
+          if (serverRenameItem) {
+            serverRenameItem.click();
+            this.isServerMenuOpen = false;
+            this.isServerRenameItemFocused = false;
+            this.isServerRenameWindowOpen = true;
+            break;
+          }
+        }
+
+        if (this.isServerRenameButtonFocused) {
+          const serverRenameButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverRenameButton");
+          if (serverRenameButton) {
+            serverRenameButton.click();
+            this.isServerRenameWindowOpen = false;
+            this.isServerRenameButtonFocused = false;
+            this.isServerListFocused = false;
+            break;
+          }
+        }
+
+        if (this.isServerRenameCancelButtonFocused) {
+          const serverRenameCancelButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverRenameCancelButton");
+          if (serverRenameCancelButton) {
+            serverRenameCancelButton.click();
+            this.isServerRenameWindowOpen = false;
+            this.isServerRenameCancelButtonFocuded = false;
+            this.isServerListFocused = false;
+            break;
+          }
+        }
+
+        if (this.isServerForgetItemFocused) {
+          const serverForgetItem = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverForgetItem");
+          if (serverForgetItem) {
+            serverForgetItem.click();
+            this.isServerMenuOpen = false;
+            this.isServerForgetItemFocused = false;
+            this.isServerListFocused = false;
+            break;
+          }
+        }
+
+        break;
+
+      case 37:
+        console.log('left key pressed');
+        
+        if (!this.isServerListFocused && !this.isAppMenuFocused && !this.isAccessKeyInputFocused && (!this.isConfirmServerButtonFocused && !this.isIgnoreServerButtonFocused)) {
+          const menuBtn = this.$.menuBtn;
+          if (menuBtn) {
+            menuBtn.focus();
+            this.isAppMenuFocused = true;
+            this.isAddServerButtonFocused = false;
+            break;
+          }
+        }
+
+        if (this.isConfirmServerButtonFocused) {
+          const ignoreButton = this.$.addServerView.$.ignoreButton;
+          if (ignoreButton) {
+            ignoreButton.focus();  // Установить фокус на кнопке
+            this.isConfirmServerButtonFocused = false;
+            this.isIgnoreServerButtonFocused = true;
+            break;
+          }
+        }
+
+        if (this.isServerRenameButtonFocused) {
+          const serverRenameCancelButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverRenameCancelButton");
+          if (serverRenameCancelButton) {
+            serverRenameCancelButton.focus();
+            this.isServerRenameCancelButtonFocused = true;
+            this.isServerRenameButtonFocused = false;
+            break;
+          }
+        }
+
+        break;
+
+      case 39:
+        console.log('right key pressed');
+
+        if (!this.isServerListFocused && !this.isAddServerButtonFocused && !this.isAccessKeyInputFocused && (!this.isConfirmServerButtonFocused && !this.isIgnoreServerButtonFocused)) {
+          const addBtn = this.$.addBtn;
+          if (addBtn) {
+            addBtn.focus();  // Установить фокус на кнопке
+            this.isAddServerButtonFocused = true;
+            this.isAppMenuFocused = false;
+            break;
+          }
+        }
+
+        if (this.isIgnoreServerButtonFocused) {
+          const addServerButton = this.$.addServerView.$.addServerButton;
+          if (addServerButton) {
+            addServerButton.focus();  // Установить фокус на кнопке
+            this.isConfirmServerButtonFocused = true;
+            this.isAccessKeyInputFocused = false;
+            this.isIgnoreServerButtonFocused = false;
+            break;
+          }
+        }
+
+        if (this.isServerRenameCancelButtonFocused) {
+          const serverRenameButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverRenameButton");
+          if (serverRenameButton) {
+            serverRenameButton.focus();
+            this.isServerRenameButtonFocused = true;
+            this.isServerRenameCancelButtonFocused = false;
+            break;
+          }
+        }
+
+        break;
+
+      case 38:
+        console.log('up key pressed');
+
+        if (this.isServerListFocused) {
+          if (!this.isServerMenuFocused && this.isServerConnectButtonFocused) {
+            const serverMenu = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverMenuButton0");
+            if (serverMenu) {
+              serverMenu.focus();  // Установить фокус на кнопке
+              this.isServerMenuFocused = true;
+              this.isServerConnectButtonFocused = false;
+              break;
+            }
+          }
+
+          if (this.isServerMenuFocused && !this.isServerConnectButtonFocused) {
+            const addBtn = this.$.addBtn;
+            if (addBtn) {
+              addBtn.focus();  // Установить фокус на кнопке
+              this.addServerButtonFocused = true;
+              this.isServerListFocused = false;
+              break;
+            }
+          }
+        }
+
+        if (this.isServerForgetItemFocused) {
+          const serverRenameItem = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverRenameItem");
+          if (serverRenameItem) {
+            serverRenameItem.focus();
+            this.isServerRenameItemFocused = true;
+            this.isServerForgetItemFocused = false;
+            break;
+          }
+        }
+
+        if (this.isServerRenameButtonFocused || this.isServerRenameCancelButtonFocused) {
+          const serverRenameInput = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverNameInput");
+          if (serverRenameInput) {
+            serverRenameInput.focus();
+            this.isServerRenameInputFocused = true;
+            this.isServerRenameButtonFocused = false;
+            this.isServerRenameCancelButtonFocused = false;
+            break;
+          }
+        }
+  
+        break;
+
+      case 40:
+        console.log('down key pressed');
+
+        if (!this.isServerListFocused) {
+
+          if (this.isAddServerButtonFocused && this.isAddServerButtonPressed) {
+            const accessKeyInput = this.$.addServerView.$.accessKeyInput;
+            if (accessKeyInput) {
+              accessKeyInput.focus();  // Установить фокус на кнопке
+              this.isAccessKeyInputFocused = true;
+              this.isAddServerButtonFocused = false;
+              break;
+            }
+          }
+
+          if (this.isAccessKeyInputFocused) {
+            const addServerButton = this.$.addServerView.$.addServerButton;
+            if (addServerButton) {
+              addServerButton.focus();  // Установить фокус на кнопке
+              this.isConfirmServerButtonFocused = true;
+              this.isAccessKeyInputFocused = false;
+              this.isIgnoreServerButtonFocused = false;
+              this.isAddServerButtonPressed = false;
+              break;
+            }
+          }
+
+          if (!this.isAddServerButtonPressed && !this.isConfirmServerButtonFocused && !this.isIgnoreServerButtonFocused) {
+            const serverMenu = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverMenuButton0");
+            if (serverMenu) {
+              serverMenu.focus();  // Установить фокус на кнопке
+              this.isServerMenuFocused = true;
+              this.isServerListFocused = true;
+              break;
+            }
+          }
+        
+        }
+
+        if (this.isServerListFocused && this.isServerMenuFocused) {
+          const serverConnectButton = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverConnectButton0");
+          if (serverConnectButton) {
+            serverConnectButton.focus();  // Установить фокус на кнопке
+            this.isServerMenuFocused = false;
+            this.isServerConnectButtonFocused = true;
+            break;
+          }
+        }
+
+        if (this.isServerMenuOpen && !this.isServerForgetItemFocused && !this.isServerRenameItemFocused) {
+          const serverRenameItem = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverRenameItem");
+          if (serverRenameItem) {
+            serverRenameItem.focus();
+            this.isServerRenameItemFocused = true;
+            break;
+          }
+        }
+
+        if (this.isServerRenameItemFocused) {
+          const serverForgetItem = document.querySelector("body > app-root").shadowRoot.querySelector("#serversView").shadowRoot.querySelector("server-list").shadowRoot.querySelector("server-hero-card:nth-child(1)").shadowRoot.querySelector("#serverForgetItem");
+          if (serverForgetItem) {
+            serverForgetItem.focus();
+            this.isServerForgetItemFocused = true;
+            this.isServerRenameItemFocused = false;
+            break;
+          }
+        }
+
+        if (this.isServerRenameWindowOpen) {
+          const serverRenameInput = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("#serverNameInput");
+          if (serverRenameInput) {
+            serverRenameInput.focus();
+            this.isServerRenameInputFocused = true;
+            break;
+          }
+        }
+
+        break;
+    }
+}
 
   setLanguage(languageCode) {
     const url = `${this.rootPath}messages/${languageCode}.json`;

@@ -128,10 +128,13 @@ Polymer({
         color: var(--error-color);
         --paper-input-container-input-color: var(--error-color);
       }
-      #add-server-button {
+      .add-server-button {
         background-color: var(--dark-green);
         color: #fff;
         padding: 0 20px;
+      }
+      :focus {
+        outline: 3px solid var(--main-green);
       }
       paper-input iron-icon {
         --iron-icon-fill-color: #333;
@@ -199,8 +202,8 @@ Polymer({
           </paper-input>
         </div>
         <div class="button-container">
-          <paper-button class="faded" on-tap="_ignoreDetectedServer">[[localize('server-add-ignore')]]</paper-button>
-          <paper-button id="add-server-button" on-tap="_addDetectedServer">[[localize('server-add')]]</paper-button>
+          <paper-button class="faded" id="ignoreButton" on-tap="_ignoreDetectedServer">[[localize('server-add-ignore')]]</paper-button>
+          <paper-button class="add-server-button" id="addServerButton" on-tap="_addDetectedServer">[[localize('server-add')]]</paper-button>
         </div>
       </div>
     </paper-dialog>

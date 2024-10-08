@@ -47,6 +47,10 @@ class OutlineLanguageView extends DirMixin(PolymerElement) {
           text-align: left;
           flex-grow: 1;
         }
+
+        :focus {
+          outline: 3px solid var(--main-green);
+        }
       </style>
 
       <div id="main">
