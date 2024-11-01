@@ -13,6 +13,8 @@
 // limitations under the License.
 
 /// <reference types='cordova'/>
+/// <reference types="cordova-plugin-file" />
+/// <reference types="cordova-plugin-file-transfer" />
 /// <reference path='../types/webintents.d.ts'/>
 
 import '@babel/polyfill';

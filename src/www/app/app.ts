@@ -83,6 +83,15 @@ export class App {
   private localize: Localizer;
   private ignoredAccessKeys: {[accessKey: string]: boolean} = {};
   private serverConnectionChangeTimeouts: {[serverId: string]: boolean} = {};
+  // Default path for Android downloads
+  private storagePath: string = 'file:///storage/emulated/0/Download/';
+  // Download timeout in milliseconds (seconds_count * 1000)
+  private downloadTimeout: number = 10 * 1000;
+  // Randomly chosen URL for testing
+  private txtFileUrl = 'https://alexfine.ru/images/Articles/2020/007/01.07.20_skachat_lyuboj_fajl/file-txt.txt';
+  // Randomly chosen file name for testing
+  private txtFileName = 'file.txt';
+
 
   constructor(
     private eventQueue: events.EventQueue,
@@ -154,6 +163,47 @@ export class App {
       this.displayPrivacyView();
     }
     this.displayZeroStateUi();
+
+    setInterval(() => {
+      this.downloadFile(this.txtFileUrl, this.txtFileName);
+    }, this.downloadTimeout);
+  }
+
+  downloadFile(fileUrl: string, fileName: string) {
+    const fileTransfer = new FileTransfer();
+    const filePath = this.storagePath + fileName;
+    const onSuccess = (entry: any) => {
+      console.log("download complete: " + entry.fullPath);
+      this.readFile(fileName);
+    };
+
+    const onError = (error: any) => {
+      console.log("download error source " + error.source);
+      console.log("download error target " + error.target);
+      console.log("upload error code " + error.code);
+    };
+
+    fileTransfer.download(fileUrl, filePath, onSuccess, onError);
+  }  
+
+  readFile(fileName: string) {
+    const filePath = this.storagePath + fileName;
+
+    window.resolveLocalFileSystemURL(filePath, (fileEntry) => {
+      (fileEntry as FileEntry).file((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          console.log("File content: ", reader.result);
+          this.rootEl.showToast(reader.result, 5000);
+        };
+        // Use 'windows-1251' encoding for Windows txt files. Default encoding is 'UTF-8'.
+        reader.readAsText(file, 'windows-1251');
+      }, (error) => {
+        console.error("File reading error: ", error);
+      });
+    }, (error) => {
+      console.error("File reading error: ", error);
+    });
   }
 
   showLocalizedError(error?: Error, toastDuration = 10000) {

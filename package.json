@@ -18,6 +18,7 @@
     "codrova-osx": "Version-controlled platform config files at src/cordova/apple/xcode/osx/Outline/config.xml, src/cordova/apple/xcode/osx/osx.json, and src/cordova/apple/xcode/osx/www/cordova_plugins.js as a workaround for https://github.com/apache/cordova-osx/issues/106. Delete these files when the issue is fixed."
   },
   "dependencies": {
+    "@awesome-cordova-plugins/file-transfer": "^6.9.0",
     "@material/mwc-button": "^0.25.3",
     "@material/mwc-circular-progress": "^0.27.0",
     "@material/mwc-formfield": "^0.25.3",
@@ -96,6 +97,9 @@
     "cordova-lib": "^11.0.0",
     "cordova-osx": "github:apache/cordova-osx",
     "cordova-plugin-clipboard": "github:Jigsaw-Code/outline-cordova-plugin-clipboard#v2.0.0",
+    "cordova-plugin-file": "^7.0.0",
+    "cordova-plugin-file-transfer": "github:apache/cordova-plugin-file-transfer",
+    "cordova-plugin-ns0m-file-transfer": "^2.0.0-8",
     "cordova-plugin-outline": "file:src/cordova/plugin",
     "cordova-webintent": "github:cordova-misc/cordova-webintent#v2.0.0",
     "css-loader": "^5.0.1",
@@ -151,7 +155,13 @@
       "cordova-plugin-splashscreen": {},
       "cordova-plugin-statusbar": {},
       "cordova-plugin-clipboard": {},
-      "cordova-webintent": {}
+      "cordova-webintent": {},
+      "cordova-plugin-device": {},
+      "cordova-plugin-file": {
+        "ANDROIDX_WEBKIT_VERSION": "1.4.0"
+      },
+      "cordova-plugin-file-transfer": {},
+      "cordova-plugin-ns0m-file-transfer": {}
     },
     "platforms": [
       "browser",
