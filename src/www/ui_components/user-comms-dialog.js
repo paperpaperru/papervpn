@@ -131,7 +131,7 @@ Polymer({
   },
 
   show: function() {
-    this.$.wrapper.classList.add('active');
+    // this.$.wrapper.classList.add('active');
   },
 
   hide: function() {

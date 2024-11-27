@@ -128,7 +128,7 @@ Polymer({
         color: var(--error-color);
         --paper-input-container-input-color: var(--error-color);
       }
-      #add-server-button {
+      .add-server-button {
         background-color: var(--dark-green);
         color: #fff;
         padding: 0 20px;
@@ -199,8 +199,8 @@ Polymer({
           </paper-input>
         </div>
         <div class="button-container">
-          <paper-button class="faded" on-tap="_ignoreDetectedServer">[[localize('server-add-ignore')]]</paper-button>
-          <paper-button id="add-server-button" on-tap="_addDetectedServer">[[localize('server-add')]]</paper-button>
+          <paper-button class="faded" id="ignoreButton" on-tap="_ignoreDetectedServer">[[localize('server-add-ignore')]]</paper-button>
+          <paper-button class="add-server-button" id="addServerButton" on-tap="_addDetectedServer">[[localize('server-add')]]</paper-button>
         </div>
       </div>
     </paper-dialog>
@@ -227,6 +227,7 @@ Polymer({
       type: Boolean,
       computed: '_computeShouldShowAltAccessMessage(useAltAccessMessage, invalidAccessKeyInput)',
     },
+    isClickOnProgress: Boolean,
   },
 
   ready: function() {
@@ -236,6 +237,21 @@ Polymer({
     // See https://github.com/PolymerElements/paper-input/issues/546.
     this.$.accessKeyInput.addEventListener('focused-changed', this._inputFocusChanged.bind(this));
     this.$.accessKeyInput.addEventListener('invalid-changed', this._inputInvalidChanged.bind(this));
+    if (this.isAndroidTV()) {
+      this.addFocusOutline();
+    }
+    this.isClickOnProgress = false;
+  },
+
+  isAndroidTV() {
+    return device.platform === "Android" && /tv|atv|bravia|shield|aosp on android/.test(navigator.userAgent.toLowerCase());
+  },
+
+  addFocusOutline()  {
+    const style = document.querySelector("body > app-root").shadowRoot.querySelector("#addServerView").shadowRoot.querySelector("style");
+    if (style) {
+      style.innerHTML += ":focus { outline: 3px solid var(--main-green); }";
+    }
   },
 
   openAddServerSheet: function() {
@@ -277,12 +293,29 @@ Polymer({
     }
     if (accessKeyInput.validate()) {
       this.fire('AddServerConfirmationRequested', {accessKey: this.accessKey});
+
+      this.dispatchEvent(
+        new CustomEvent('validation-success', {
+          bubbles: true,
+          composed: true,
+        })
+      );
     }
   },
 
   _addDetectedServer: function() {
+    if (this.isClickOnProgress) {
+      console.log("Duplicate click ignored (processing)");
+      return;
+    }
+    this.isClickOnProgress = true;
+
     this.fire('AddServerRequested', {accessKey: this.accessKey});
     this.close();
+
+    setTimeout(() => {
+      this.isClickOnProgress = false;
+    }, 300);
   },
 
   _ignoreDetectedServer: function() {

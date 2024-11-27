@@ -47,6 +47,10 @@ class OutlineLanguageView extends DirMixin(PolymerElement) {
           text-align: left;
           flex-grow: 1;
         }
+
+        :host(.is-tv) :focus {
+          outline: 3px solid var(--main-green);
+        }
       </style>
 
       <div id="main">
@@ -90,6 +94,17 @@ class OutlineLanguageView extends DirMixin(PolymerElement) {
 
   _shouldHideCheckmark(selectedLanguage, languageCode) {
     return selectedLanguage !== languageCode;
+  }
+
+  static isAndroidTV() {
+    return device.platform === "Android" && /tv|atv|bravia|shield|aosp on android/.test(navigator.userAgent.toLowerCase());
+  }
+
+  ready() {
+    super.ready();
+    if (OutlineLanguageView.isAndroidTV()) {
+      this.classList.add('is-tv');
+    }
   }
 }
 customElements.define(OutlineLanguageView.is, OutlineLanguageView);

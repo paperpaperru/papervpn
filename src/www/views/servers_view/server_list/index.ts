@@ -52,7 +52,7 @@ export class ServerList extends LitElement {
     } else {
       return html`
         ${this.servers.map(
-          server => html`<server-row-card .localize=${this.localize} .server=${server}></server-row-card>`
+          (server, index) => html`<server-row-card .localize=${this.localize} .server=${server} .serverIndex=${index}></server-row-card>`
         )}
       `;
     }

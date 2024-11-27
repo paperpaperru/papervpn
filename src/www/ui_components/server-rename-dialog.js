@@ -28,10 +28,10 @@ Polymer({
     </style>
     <paper-dialog id="renameDialog" with-backdrop="">
       <h3>[[localize('server-rename')]]</h3>
-      <mwc-textfield id="serverNameInput" maxlength="100" tabindex="0"></mwc-textfield>
+      <mwc-textfield id="serverNameInput" maxlength="100" tabindex="0" helper="Для выхода из редактирования два раза нажмите кнопку 'Назад'"></mwc-textfield>
       <div class="buttons">
-        <paper-button dialog-dismiss="">[[localize('cancel')]]</paper-button>
-        <paper-button dialog-confirm="" on-tap="_saveRename">[[localize('save')]]</paper-button>
+        <paper-button id="serverRenameCancelButton" dialog-dismiss="">[[localize('cancel')]]</paper-button>
+        <paper-button id="serverRenameButton" dialog-confirm="" on-tap="_saveRename">[[localize('save')]]</paper-button>
       </div>
     </paper-dialog>
   `,
@@ -50,6 +50,9 @@ Polymer({
   open: function (serverName, serverId) {
     // Store the initial serverName so we can know if it changed, and
     // store the serverId so we can emit the rename request event.
+    if (this.isAndroidTV()) {
+      this.addFocusOutline();
+    }
     this.__serverName = serverName;
     this.__serverId = serverId;
     this.$.serverNameInput.value = serverName;
@@ -66,4 +69,15 @@ Polymer({
       this.fire('RenameRequested', {serverId: this.__serverId, newName: newName});
     }
   },
+
+  isAndroidTV: function () {
+    return device.platform === "Android" && /tv|atv|bravia|shield|aosp on android/.test(navigator.userAgent.toLowerCase());
+  },
+
+  addFocusOutline: function() {
+    const style = document.querySelector("body > app-root").shadowRoot.querySelector("#serverRenameDialog").shadowRoot.querySelector("style");
+    if (style) {
+      style.innerHTML += "paper-button:focus { outline: 3px solid var(--main-green); }";
+    }
+  }
 });
