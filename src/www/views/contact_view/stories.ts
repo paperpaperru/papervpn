@@ -45,7 +45,6 @@ export const Example = ({variant, onSuccess, onError}: {variant: AppType; onSucc
     <contact-view
       .localize=${localize}
       .variant=${variant}
-      .errorReporter=${{report: console.log}}
       @success=${onSuccess}
       @error=${onError}
     ></contact-view>

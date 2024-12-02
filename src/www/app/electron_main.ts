@@ -23,7 +23,6 @@ import {ErrorCode, OutlinePluginError} from '../model/errors';
 
 import {AbstractClipboard} from './clipboard';
 import {ElectronOutlineTunnel} from './electron_outline_tunnel';
-import {getSentryBrowserIntegrations, OutlineErrorReporter, Tags} from '../shared/error_reporter';
 import {FakeOutlineTunnel} from './fake_tunnel';
 import {getLocalizationFunction, main} from './main';
 import {AbstractUpdater} from './updater';
@@ -86,20 +85,6 @@ class ElectronVpnInstaller implements VpnInstaller {
   }
 }
 
-class ElectronErrorReporter implements OutlineErrorReporter {
-  constructor() {
-    // parameters are initialized in main process
-    Sentry.init({
-      integrations: getSentryBrowserIntegrations,
-    });
-  }
-
-  report(userFeedback: string, feedbackCategory: string, userEmail?: string, tags?: Tags): Promise<void> {
-    Sentry.captureEvent({message: userFeedback, user: {email: userEmail}, tags: {...tags, category: feedbackCategory}});
-    return Promise.resolve();
-  }
-}
-
 main({
   hasDeviceSupport: () => isOsSupported,
   getTunnelFactory: () => {
@@ -109,7 +94,6 @@ main({
   },
   getUrlInterceptor: () => interceptor,
   getClipboard: () => new ElectronClipboard(),
-  getErrorReporter: _ => new ElectronErrorReporter(),
   getUpdater: () => new ElectronUpdater(),
   getVpnServiceInstaller: () => new ElectronVpnInstaller(),
   quitApplication: () => window.electron.methodChannel.send('quit-app'),

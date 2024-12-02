@@ -116,7 +116,6 @@ export function main(platform: OutlinePlatform) {
         debugMode,
         platform.getUrlInterceptor(),
         platform.getClipboard(),
-        platform.getErrorReporter(environmentVars),
         settings,
         environmentVars,
         platform.getUpdater(),

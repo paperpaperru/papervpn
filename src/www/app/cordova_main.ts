@@ -26,7 +26,6 @@ import * as Sentry from '@sentry/browser';
 
 import {AbstractClipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
-import {SentryErrorReporter, Tags} from '../shared/error_reporter';
 import {main} from './main';
 import * as errors from '../model/errors';
 import {OutlinePlatform} from './platform';
@@ -60,24 +59,6 @@ async function pluginExecWithErrorCode<T>(cmd: string, ...args: unknown[]): Prom
     return await pluginExec<T>(cmd, ...args);
   } catch (errorCode) {
     throw errors.fromErrorCode(errorCode);
-  }
-}
-
-// Adds reports from the (native) Cordova plugin.
-class CordovaErrorReporter extends SentryErrorReporter {
-  constructor(appVersion: string, dsn: string, tags: Tags) {
-    super(appVersion, dsn, tags);
-    // Initializes the error reporting framework with the supplied credentials.
-    // TODO(fortuna): This is an Promise that is not waited for and can cause a race condition.
-    // We should fix it with an async factory function for the Reporter.
-    pluginExec<void>('initializeErrorReporting', dsn).catch(console.error);
-  }
-
-  async report(userFeedback: string, feedbackCategory: string, userEmail?: string): Promise<void> {
-    await super.report(userFeedback, feedbackCategory, userEmail);
-    // Sends previously captured logs and events to the error reporting framework.
-    // Associates the report to the provided unique identifier.
-    await pluginExec<void>('reportEvents', Sentry.lastEventId() || '');
   }
 }
 
@@ -136,13 +117,6 @@ class CordovaPlatform implements OutlinePlatform {
 
   getClipboard() {
     return new CordovaClipboard();
-  }
-
-  getErrorReporter(env: EnvironmentVariables) {
-    const sharedTags = {'build.number': env.APP_BUILD_NUMBER};
-    return this.hasDeviceSupport()
-      ? new CordovaErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '', sharedTags)
-      : new SentryErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '', sharedTags);
   }
 
   getUpdater() {
