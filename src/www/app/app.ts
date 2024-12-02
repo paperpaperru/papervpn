@@ -21,7 +21,6 @@ import {SERVER_CONNECTION_INDICATOR_DURATION_MS} from '../views/servers_view/ser
 
 import {Clipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
-import {OutlineErrorReporter} from '../shared/error_reporter';
 import {OutlineServerRepository} from './outline_server_repository';
 import {Settings, SettingsKey} from './settings';
 import {Updater} from './updater';
@@ -91,7 +90,6 @@ export class App {
     private debugMode: boolean,
     urlInterceptor: UrlInterceptor | undefined,
     private clipboard: Clipboard,
-    private errorReporter: OutlineErrorReporter,
     private settings: Settings,
     environmentVars: EnvironmentVariables,
     private updater: Updater,
@@ -106,7 +104,6 @@ export class App {
     this.syncConnectivityStateToServerCards();
     rootEl.appVersion = environmentVars.APP_VERSION;
     rootEl.appBuild = environmentVars.APP_BUILD_NUMBER;
-    rootEl.errorReporter = this.errorReporter;
 
     if (urlInterceptor) {
       this.registerUrlInterceptionListener(urlInterceptor);
@@ -498,7 +495,6 @@ export class App {
     const {feedback, category, email} = formData;
     this.feedbackViewEl.submitting = true;
     try {
-      await this.errorReporter.report(feedback, category, email);
       this.feedbackViewEl.submitting = false;
       this.feedbackViewEl.resetForm();
       this.changeToDefaultPage();

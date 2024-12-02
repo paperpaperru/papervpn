@@ -297,7 +297,6 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
               id="contactView"
               localize="[[localize]]"
               variant="client"
-              error-reporter="[[errorReporter]]"
               on-success="showContactSuccessToast"
               on-error="showContactErrorToast"
             ></contact-view>
@@ -551,10 +550,6 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
       },
       appBuild: {
         type: Number,
-        readonly: true,
-      },
-      errorReporter: {
-        type: Object,
         readonly: true,
       },
       page: {

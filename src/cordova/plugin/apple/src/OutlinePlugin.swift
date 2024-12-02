@@ -15,9 +15,7 @@
 import CocoaLumberjack
 import CocoaLumberjackSwift
 import NetworkExtension
-import Sentry
 
-import OutlineSentryLogger
 import OutlineNotification
 import OutlineTunnel
 
@@ -32,7 +30,6 @@ class OutlinePlugin: CDVPlugin {
 
     public static let kMaxBreadcrumbs: UInt = 100
 
-    private var sentryLogger: OutlineSentryLogger!
     private var callbacks: [String: String]!
 
 #if os(macOS)
@@ -50,7 +47,6 @@ class OutlinePlugin: CDVPlugin {
 #endif
 
     override func pluginInitialize() {
-        self.sentryLogger = OutlineSentryLogger(forAppGroup: OutlinePlugin.kAppGroup)
         callbacks = [String: String]()
 
         OutlineVpn.shared.onVpnStatusChange(onVpnStatusChange)
@@ -138,51 +134,6 @@ class OutlinePlugin: CDVPlugin {
         }
         DDLogInfo("\(Action.onStatusChange) \(tunnelId)")
         setCallbackId(command.callbackId!, action: Action.onStatusChange, tunnelId: tunnelId)
-    }
-
-    // MARK: Error reporting
-
-    func initializeErrorReporting(_ command: CDVInvokedUrlCommand) {
-        DDLogInfo("initializeErrorReporting")
-        guard let sentryDsn = command.argument(at: 0) as? String else {
-            return sendError("Missing error reporting API key.", callbackId: command.callbackId)
-        }
-        SentrySDK.start { options in
-            options.dsn = sentryDsn
-            options.maxBreadcrumbs = UInt(OutlinePlugin.kMaxBreadcrumbs)
-            // Remove device identifier, timezone, and memory stats.
-            options.beforeSend = { event in
-                event.context?["app"]?.removeValue(forKey: "device_app_hash")
-                if var device = event.context?["device"] {
-                    device.removeValue(forKey: "timezone")
-                    device.removeValue(forKey: "memory_size")
-                    device.removeValue(forKey: "free_memory")
-                    device.removeValue(forKey: "usable_memory")
-                    device.removeValue(forKey: "storage_size")
-                    event.context?["device"] = device
-                }
-                return event
-            }
-        }
-        sendSuccess(true, callbackId: command.callbackId)
-    }
-
-    func reportEvents(_ command: CDVInvokedUrlCommand) {
-        var uuid: String
-        if let eventId = command.argument(at: 0) as? String {
-            // Associate this event with the one reported from JS.
-            SentrySDK.configureScope { scope in
-                scope.setTag(value: eventId, key: "user_event_id")
-            }
-            uuid = eventId
-        } else {
-            uuid = NSUUID().uuidString
-        }
-        self.sentryLogger.addVpnExtensionLogsToSentry(maxBreadcrumbsToAdd: Int(OutlinePlugin.kMaxBreadcrumbs / 2))
-        SentrySDK.capture(message: "\(OutlinePlugin.kPlatform) report (\(uuid))") { scope in
-            scope.setLevel(.info)
-        }
-        self.sendSuccess(true, callbackId: command.callbackId)
     }
 
 #if os(macOS)

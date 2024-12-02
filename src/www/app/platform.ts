@@ -14,7 +14,6 @@
 
 import {Clipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
-import {OutlineErrorReporter} from '../shared/error_reporter';
 import {TunnelFactory} from './tunnel';
 import {Updater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
@@ -34,8 +33,6 @@ export interface OutlinePlatform {
   getUrlInterceptor(): UrlInterceptor | undefined;
 
   getClipboard(): Clipboard;
-
-  getErrorReporter(environment: EnvironmentVariables): OutlineErrorReporter;
 
   getUpdater(): Updater;
 

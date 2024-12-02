@@ -29,7 +29,6 @@ import './support_form';
 import {IssueType, UNSUPPORTED_ISSUE_TYPE_HELPPAGES} from './issue_type';
 import {AppType} from './app_type';
 import {FormValues, SupportForm, ValidFormValues} from './support_form';
-import {OutlineErrorReporter} from '../../shared/error_reporter';
 import {Localizer} from 'src/infrastructure/i18n';
 
 /** The possible steps in the stepper. Only one step is shown at a time. */
@@ -134,7 +133,6 @@ export class ContactView extends LitElement {
 
   @property({type: Function}) localize: Localizer = msg => msg;
   @property({type: String}) variant: AppType = AppType.CLIENT;
-  @property({type: Object, attribute: 'error-reporter'}) errorReporter: OutlineErrorReporter;
 
   @state() private step: Step = Step.ISSUE_WIZARD;
   private selectedIssueType?: IssueType;
@@ -208,17 +206,6 @@ export class ContactView extends LitElement {
     }
 
     const {description, email, ...tags} = this.formValues as ValidFormValues;
-    try {
-      await this.errorReporter.report(description, this.selectedIssueType?.toString() ?? 'unknown', email, {
-        ...tags,
-        formVersion: 2,
-      });
-    } catch (e) {
-      console.error(`Failed to send feedback report: ${e.message}`);
-      this.isFormSubmitting = false;
-      this.dispatchEvent(new CustomEvent('error'));
-      return;
-    }
 
     this.isFormSubmitting = false;
     this.reset();
