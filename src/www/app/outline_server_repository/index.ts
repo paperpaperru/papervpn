@@ -22,7 +22,7 @@ import {ServerRepository, ServerType} from '../../model/server';
 import {TunnelFactory} from '../tunnel';
 
 import {OutlineServer} from './server';
-import {staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
+import {staticKeyToShadowsocksSessionConfig, staticKeyToXraySessionConfig} from './access_key_serialization';
 
 // TODO(daniellacosse): write unit tests for these functions
 
@@ -46,7 +46,7 @@ function staticKeysMatch(a: string, b: string): boolean {
 
 // Determines if the key is expected to be a url pointing to an ephemeral session config.
 function isDynamicAccessKey(accessKey: string): boolean {
-  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://');
+  return accessKey.startsWith('ssconf://') || accessKey.startsWith('https://') || accessKey.startsWith('xray://');
 }
 
 // NOTE: For extracting a name that the user has explicitly set, only.
@@ -180,7 +180,7 @@ export class OutlineServerRepository implements ServerRepository {
 
   validateAccessKey(accessKey: string) {
     if (!isDynamicAccessKey(accessKey)) {
-      return this.validateStaticKey(accessKey);
+      this.validateStaticKey(accessKey);
     }
 
     try {
@@ -192,6 +192,13 @@ export class OutlineServerRepository implements ServerRepository {
   }
 
   private validateStaticKey(staticKey: string) {
+    if (staticKey.startsWith("ss://"))
+      this.validateShadowsocksStaticKey(staticKey)
+    else if (staticKey.startsWith("vless://") || staticKey.startsWith("vmess://")) {
+      this.validateXrayStaticKey(staticKey);
+    }
+  }
+  private validateShadowsocksStaticKey(staticKey: string) {
     const alreadyAddedServer = this.serverFromAccessKey(staticKey);
     if (alreadyAddedServer) {
       throw new errors.ServerAlreadyAdded(alreadyAddedServer);
@@ -210,6 +217,9 @@ export class OutlineServerRepository implements ServerRepository {
     }
   }
 
+  private validateXrayStaticKey(staticKey: string) {
+    staticKeyToXraySessionConfig(staticKey);
+  }
   private serverFromAccessKey(accessKey: string): OutlineServer | undefined {
     for (const server of this.serverById.values()) {
       if (server.type === ServerType.DYNAMIC_CONNECTION && accessKey === server.accessKey) {
@@ -305,13 +315,14 @@ export class OutlineServerRepository implements ServerRepository {
 
   private createServer(id: string, accessKey: string, name?: string): OutlineServer {
     const server = new OutlineServer(
-      id,
-      accessKey,
-      isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
-      name,
-      this.createTunnel(id),
-      this.eventQueue
+        id,
+        accessKey,
+        isDynamicAccessKey(accessKey) ? ServerType.DYNAMIC_CONNECTION : ServerType.STATIC_CONNECTION,
+        name,
+        this.createTunnel(id),
+        this.eventQueue
     );
+
 
     try {
       this.validateAccessKey(accessKey);
