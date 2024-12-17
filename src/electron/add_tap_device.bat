@@ -94,37 +94,6 @@ echo (Re-)enabling TAP network device...
 :: a disabled state. While no such failure has yet been observed, this command would correct it and
 :: should behave idempotently otherwise.
 powershell "Enable-NetAdapter -Name \"%DEVICE_NAME%\"" <nul
-
-:: Give the device an IP address.
-:: 10.0.85.x is a guess which we hope will work for most users (Docker for
-:: Windows uses 10.0.75.x by default): if the address is already in use the
-:: script will fail and the installer will show an error message to the user.
-:: TODO: Actually search the system for an unused subnet or make the subnet
-::       configurable in the Outline client.
-echo Configuring TAP device subnet...
-%SystemRoot%\System32\netsh interface ip set address %DEVICE_NAME% static 10.0.85.2 255.255.255.255
-if %errorlevel% neq 0 (
-  echo Could not set TAP network device subnet. >&2
-  exit /b %ERROR_TAP_CONFIGURE_SUBNET%
-)
-
-:: Windows has no system-wide DNS server; each network device can have its
-:: "own" set of DNS servers. Windows seems to use the DNS server(s) of the
-:: network device associated with the default gateway. This is good for us
-:: as it means we do not have to modify the DNS settings of any other network
-:: device in the system. Configure with Cloudflare and Quad9 resolvers
-echo Configuring primary DNS...
-%SystemRoot%\System32\netsh interface ip set dnsservers %DEVICE_NAME% static address=1.1.1.1
-if %errorlevel% neq 0 (
-  echo Could not configure TAP device primary DNS. >&2
-  exit /b %ERROR_TAP_CONFIGURE_DNS%
-)
-echo Configuring secondary DNS...
-%SystemRoot%\System32\netsh interface ip add dnsservers %DEVICE_NAME% 9.9.9.9 index=2
-if %errorlevel% neq 0 (
-  echo Could not configure TAP device secondary DNS. >&2
-  exit /b %ERROR_TAP_CONFIGURE_DNS%
-)
 echo TAP network device added and configured successfully
 exit /b 0
 
