@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {fetchShadowsocksSessionConfig, staticKeyToShadowsocksSessionConfig} from './access_key_serialization';
+import {fetchSessionConfig, staticKeyToSessionConfig} from './access_key_serialization';
 import * as errors from '../../model/errors';
 import * as events from '../../model/events';
 import {Server, ServerType} from '../../model/server';
-import {Tunnel, TunnelStatus, ShadowsocksSessionConfig} from '../tunnel';
-
+import {ShadowsocksSessionConfig, Tunnel, TunnelStatus, XraySessionConfig} from '../tunnel';
 
 // PLEASE DON'T use this class outside of this `outline_server_repository` folder!
 
@@ -25,11 +24,10 @@ export class OutlineServer implements Server {
   // We restrict to AEAD ciphers because unsafe ciphers are not supported in go-tun2socks.
   // https://shadowsocks.org/en/spec/AEAD-Ciphers.html
   private static readonly SUPPORTED_CIPHERS = ['chacha20-ietf-poly1305', 'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm'];
-
   errorMessageId?: string;
-  private sessionConfig?: ShadowsocksSessionConfig;
+  private sessionConfig?: ShadowsocksSessionConfig | XraySessionConfig;
 
-  constructor(
+  public constructor(
     public readonly id: string,
     public readonly accessKey: string,
     public readonly type: ServerType,
@@ -39,11 +37,13 @@ export class OutlineServer implements Server {
   ) {
     switch (this.type) {
       case ServerType.DYNAMIC_CONNECTION:
-        this.accessKey = accessKey.replace(/^ssconf:\/\//, 'https://');
+        this.accessKey = accessKey.replace(
+            /^ssconf:\/\//, 'https://'
+        ).replace(/^xray:\/\//, 'https://');
         break;
       case ServerType.STATIC_CONNECTION:
       default:
-        this.sessionConfig = staticKeyToShadowsocksSessionConfig(accessKey);
+        this.sessionConfig = staticKeyToSessionConfig(accessKey);
         break;
     }
 
@@ -78,7 +78,13 @@ export class OutlineServer implements Server {
   get address() {
     if (!this.sessionConfig) return '';
 
-    return `${this.sessionConfig.host}:${this.sessionConfig.port}`;
+    let response = this.sessionConfig.host
+
+    if ( 'port' in this.sessionConfig ) {
+      response = `${response}:${this.sessionConfig.port}`;
+    }
+
+    return response;
   }
 
   get sessionConfigLocation() {
@@ -94,12 +100,17 @@ export class OutlineServer implements Server {
   }
 
   async connect() {
+    let tunnelType = 'ss';
     if (this.type === ServerType.DYNAMIC_CONNECTION) {
-      this.sessionConfig = await fetchShadowsocksSessionConfig(this.sessionConfigLocation);
+      this.sessionConfig = await fetchSessionConfig(this.sessionConfigLocation);
+    }
+
+    if ( 'xrayConfig' in this.sessionConfig ) {
+      tunnelType = 'xray';
     }
 
     try {
-      await this.tunnel.start(this.sessionConfig);
+      await this.tunnel.start(this.sessionConfig, tunnelType);
     } catch (cause) {
       // e originates in "native" code: either Cordova or Electron's main process.
       // Because of this, we cannot assume "instanceof OutlinePluginError" will work.
@@ -123,11 +134,9 @@ export class OutlineServer implements Server {
       throw new errors.RegularNativeError();
     }
   }
-
   checkRunning(): Promise<boolean> {
     return this.tunnel.isRunning();
   }
-
   static isServerCipherSupported(cipher?: string) {
     return cipher !== undefined && OutlineServer.SUPPORTED_CIPHERS.includes(cipher);
   }
