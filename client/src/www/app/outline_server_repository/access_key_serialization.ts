@@ -15,9 +15,21 @@
 import {SHADOWSOCKS_URI} from 'ShadowsocksConfig';
 
 import * as errors from '../../model/errors';
-import {ShadowsocksSessionConfig} from '../tunnel';
+import {ShadowsocksSessionConfig, XraySessionConfig} from '../tunnel';
 
 // DON'T use these methods outside of this folder!
+
+
+export function staticKeyToSessionConfig(staticKey: string): ShadowsocksSessionConfig | XraySessionConfig {
+  if (staticKey.startsWith('ss://')) {
+    return staticKeyToShadowsocksSessionConfig(staticKey)
+  } else if (staticKey.startsWith('vless://') || staticKey.startsWith('vmess://')) {
+    return staticKeyToXraySessionConfig(staticKey)
+  }
+  else {
+    throw new errors.ServerAccessKeyInvalid('Invalid static access key, unsupported or missing protoco')
+  }
+}
 
 // Parses an access key string into a ShadowsocksConfig object.
 export function staticKeyToShadowsocksSessionConfig(staticKey: string): ShadowsocksSessionConfig {
@@ -35,13 +47,15 @@ export function staticKeyToShadowsocksSessionConfig(staticKey: string): Shadowso
   }
 }
 
-function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSessionConfig | null {
-  const responseJson = JSON.parse(responseBody);
+interface ShadowsocksServerConfig {
+  method: string,
+  password: string,
+  server: string,
+  server_port: number,
+  prefix: string
+}
 
-  if ('error' in responseJson) {
-    throw new errors.SessionConfigError(responseJson.error.message);
-  }
-
+function parseShadowsocksSessionConfigJson(responseJson: ShadowsocksServerConfig): ShadowsocksSessionConfig | null {
   const {method, password, server, server_port, prefix} = responseJson;
 
   // These are the mandatory keys.
@@ -66,9 +80,125 @@ function parseShadowsocksSessionConfigJson(responseBody: string): ShadowsocksSes
   };
 }
 
+export function staticKeyToXraySessionConfig(staticKey: string): XraySessionConfig {
+  const protocol: string  = staticKey.substring(0, 5);
+  const urlParserResult = new URL(`http${staticKey.substring(5)}`);
+
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+  const jsonConfig: any = {
+    outbounds: [
+      {
+        protocol: protocol,
+        settings: {
+          vnext: [
+            {
+              address: urlParserResult.hostname,
+              port: parseInt(urlParserResult.port),
+              users: [
+                {
+                  id: urlParserResult.username
+                }
+              ]
+            }
+          ]
+        },
+        streamSettings: {
+          network: urlParserResult.searchParams.get("type"),
+          security: urlParserResult.searchParams.get("security"),
+        }
+      }
+    ]
+  };
+
+  if ( urlParserResult.searchParams.get("security") == "tls" ) {
+    jsonConfig.outbounds[0].streamSettings.tlsSettings = {
+      serverName: urlParserResult.searchParams.get("sni"),
+      fingerprint: "chrome",
+      alpn: [
+        "h2",
+        "http/1.1"
+      ],
+    };
+    if ( urlParserResult.searchParams.get("allowInsecure") != null )
+      jsonConfig.outbounds[0].streamSettings.tlsSettings.allowInsecure =
+          urlParserResult.searchParams.get("allowInsecure");
+  }
+  else if ( urlParserResult.searchParams.get("security") == "reality" ) {
+    jsonConfig.outbounds[0].streamSettings.realitySettings = {
+      serverName: urlParserResult.searchParams.get("sni"),
+      fingerprint: "chrome",
+      publicKey: urlParserResult.searchParams.get("pbk"),
+      spiderX: "/",
+      shortId: "",
+    };
+  }
+
+  if ( protocol == "vless" ) {
+    jsonConfig.outbounds[0].settings.vnext[0].users[0].encryption = "none";
+    if ( urlParserResult.searchParams.get("flow") )
+      jsonConfig.outbounds[0].settings.vnext[0].users[0].flow = urlParserResult.searchParams.get("flow");
+  }
+
+  if ( urlParserResult.searchParams.get("type") == "quic" ) {
+    jsonConfig.outbounds[0].streamSettings.quicSettings = {};
+  }
+  else if ( urlParserResult.searchParams.get("type") == "kcp" ) {
+    jsonConfig.outbounds[0].streamSettings.kcpSettings = {};
+  }
+
+  console.log(JSON.stringify(jsonConfig));
+
+  jsonConfig.inbounds = [
+    {
+      port: 12080,
+      listen: "127.0.0.1",
+      protocol: "socks",
+      settings: {
+        udp: true
+      }
+    }
+  ];
+
+  return {
+    xrayConfig: JSON.stringify(jsonConfig),
+    host: urlParserResult.hostname,
+  };
+}
+
+interface VlessNode {
+  address: string
+}
+interface Settings {
+  vnext: VlessNode[]
+}
+interface Outbound {
+  settings: Settings
+}
+interface Inbound {
+  host: string,
+  port: number
+}
+interface XrayServerConfig {
+  outbounds: Outbound[],
+  inbounds: Inbound[]
+}
+
+function parseXraySessionConfigJson(responseJson: XrayServerConfig): XraySessionConfig | null {
+  const host: string = responseJson.outbounds[0].settings.vnext[0].address;
+  responseJson.inbounds[0].port = 12080
+
+  return {
+    xrayConfig: JSON.stringify(responseJson),
+    host: host,
+  }
+}
+
 // fetches information from a dynamic access key and attempts to parse it
 // TODO(daniellacosse): unit tests
-export async function fetchShadowsocksSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig> {
+export async function fetchSessionConfig(configLocation: URL): Promise<ShadowsocksSessionConfig|XraySessionConfig> {
+  const fixedConfigLocation = configLocation.toString().replace('^xray:', 'https:');
+  configLocation = new URL(fixedConfigLocation);
+  configLocation.searchParams.append('type', '1')
   let response;
   try {
     response = await fetch(configLocation, {cache: 'no-store', redirect: 'follow'});
@@ -82,8 +212,21 @@ export async function fetchShadowsocksSessionConfig(configLocation: URL): Promis
     if (responseBody.startsWith('ss://')) {
       return staticKeyToShadowsocksSessionConfig(responseBody);
     }
+    else {
+      const responseJson = JSON.parse(responseBody);
 
-    return parseShadowsocksSessionConfigJson(responseBody);
+      if ('error' in responseJson) {
+        throw new errors.SessionConfigError(responseJson.error.message);
+      }
+
+      if ( 'method' in responseJson ) {
+        return parseShadowsocksSessionConfigJson(responseJson);
+      }
+      else {
+        return parseXraySessionConfigJson(responseJson);
+      }
+    }
+
   } catch (cause) {
     if (cause instanceof errors.SessionConfigError) {
       throw cause;
