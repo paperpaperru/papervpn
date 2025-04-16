@@ -153,7 +153,7 @@ export class App {
     // if (!this.arePrivacyTermsAcked()) {
     //   this.displayPrivacyView();
     // }
-    // this.displayZeroStateUi();
+    this.displayZeroStateUi();
   }
 
   showLocalizedError(error?: Error, toastDuration = 10000) {
