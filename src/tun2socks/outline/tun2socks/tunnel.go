@@ -29,19 +29,6 @@ import (
 	"github.com/Jigsaw-Code/outline-client/src/tun2socks/tunnel"
 )
 
-// Tunnel represents a tunnel from a TUN device to a server.
-type Tunnel interface {
-	tunnel.Tunnel
-
-	// UpdateUDPSupport determines if UDP is supported following a network connectivity change.
-	// Sets the tunnel's UDP connection handler accordingly, falling back to DNS over TCP if UDP is not supported.
-	// Returns whether UDP proxying is supported in the new network.
-	UpdateUDPSupport() bool
-}
-
-// Deprecated: use Tunnel directly.
-type OutlineTunnel = Tunnel
-
 type outlinetunnel struct {
 	tunnel.Tunnel
 	lwipStack    core.LWIPStack
@@ -58,7 +45,7 @@ type outlinetunnel struct {
 // `cipher` is the encryption cipher used by the Shadowsocks proxy.
 // `isUDPEnabled` indicates if the Shadowsocks proxy and the network support proxying UDP traffic.
 // `tunWriter` is used to output packets back to the TUN device.  OutlineTunnel.Disconnect() will close `tunWriter`.
-func newTunnel(streamDialer transport.StreamDialer, packetDialer transport.PacketListener, isUDPEnabled bool, tunWriter io.WriteCloser) (Tunnel, error) {
+func newTunnel(streamDialer transport.StreamDialer, packetDialer transport.PacketListener, isUDPEnabled bool, tunWriter io.WriteCloser) (tunnel.UpdatableUDPSupportTunnel, error) {
 	if tunWriter == nil {
 		return nil, errors.New("Must provide a TUN writer")
 	}
