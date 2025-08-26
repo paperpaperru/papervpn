@@ -191,8 +191,9 @@ public class OutlinePlugin extends CordovaPlugin {
         // Tunnel instance actions: tunnel ID is always the first argument.
         if (Action.START.is(action)) {
           final String tunnelId = args.getString(0);
-          final JSONObject config = args.getJSONObject(1);
-          int errorCode = startVpnTunnel(tunnelId, config);
+          final String tunnelType = args.getString(1);
+          final JSONObject config = args.getJSONObject(2);
+          int errorCode = startVpnTunnel(tunnelId, tunnelType, config);
           sendErrorCode(callback, errorCode);
         } else if (Action.STOP.is(action)) {
           final String tunnelId = args.getString(0);
@@ -259,11 +260,11 @@ public class OutlinePlugin extends CordovaPlugin {
     startVpnRequest = null;
   }
 
-  private int startVpnTunnel(final String tunnelId, final JSONObject config) throws Exception {
+  private int startVpnTunnel(final String tunnelId, final String tunnelType, final JSONObject config) throws Exception {
     LOG.info(String.format(Locale.ROOT, "Starting VPN tunnel %s", tunnelId));
     final TunnelConfig tunnelConfig;
     try {
-      tunnelConfig = VpnTunnelService.makeTunnelConfig(tunnelId, config);
+      tunnelConfig = VpnTunnelService.makeTunnelConfig(tunnelId, tunnelType, config);
     } catch (Exception e) {
       LOG.log(Level.SEVERE, "Failed to retrieve the tunnel proxy config.", e);
       return ErrorCode.ILLEGAL_SERVER_CONFIGURATION.value;
