@@ -24,11 +24,13 @@ import CocoaLumberjackSwift
 @objcMembers
 public class OutlineTunnel: NSObject, Codable {
     public var id: String?
+    public var tunnelType: String?
     public var host: String?
     public var port: String?
     public var method: String?
     public var password: String?
     public var prefix: Data?
+    public var xrayConfig: String?
     public var config: [String: String] {
         let scalars = prefix?.map{Unicode.Scalar($0)}
         let characters = scalars?.map{Character($0)}
@@ -47,6 +49,7 @@ public class OutlineTunnel: NSObject, Codable {
     public convenience init(id: String, config: [String: Any]) {
         self.init()
         self.id = id
+        self.tunnelType = config["tunnelType"] as? String
         self.host = config["host"] as? String
         self.password = config["password"] as? String
         self.method = config["method"] as? String
@@ -56,6 +59,7 @@ public class OutlineTunnel: NSObject, Codable {
         if let prefix = config["prefix"] as? String {
             self.prefix = Data(prefix.utf16.map{UInt8($0)})
         }
+        self.xrayConfig = config["xrayConfig"] as? String
     }
     
     public func encode() -> Data? {

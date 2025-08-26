@@ -31,6 +31,16 @@ type Tunnel interface {
 	Write(data []byte) (int, error)
 }
 
+// UpdatableUDPSupportTunnel represents a tunnel from a TUN device to a server.
+type UpdatableUDPSupportTunnel interface {
+	Tunnel
+
+	// UpdateUDPSupport determines if UDP is supported following a network connectivity change.
+	// Sets the tunnel's UDP connection handler accordingly, falling back to DNS over TCP if UDP is not supported.
+	// Returns whether UDP proxying is supported in the new network.
+	UpdateUDPSupport() bool
+}
+
 type tunnel struct {
 	tunWriter   io.WriteCloser
 	lwipStack   core.LWIPStack
