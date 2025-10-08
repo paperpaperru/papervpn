@@ -54,8 +54,6 @@ public class OutlinePlugin extends CordovaPlugin {
     ON_STATUS_CHANGE("onStatusChange"),
     IS_RUNNING("isRunning"),
     IS_REACHABLE("isServerReachable"),
-    INIT_ERROR_REPORTING("initializeErrorReporting"),
-    REPORT_EVENTS("reportEvents"),
     QUIT("quitApplication");
 
     private final static Map<String, Action> actions = new HashMap<>();
