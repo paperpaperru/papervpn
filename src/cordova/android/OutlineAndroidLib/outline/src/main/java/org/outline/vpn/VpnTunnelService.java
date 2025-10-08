@@ -37,7 +37,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.outline.IVpnTunnelService;
 import org.outline.TunnelConfig;
-import org.outline.log.SentryErrorReporter;
 import org.outline.shadowsocks.ShadowsocksConfig;
 import org.outline.shadowsocks.XrayConfig;
 import shadowsocks.Shadowsocks;
@@ -131,11 +130,6 @@ public class VpnTunnelService extends VpnService {
     public boolean isServerReachable(String host, int port) {
       return VpnTunnelService.this.isServerReachable(host, port);
     }
-
-    @Override
-    public void initErrorReporting(String apiKey) {
-      VpnTunnelService.this.initErrorReporting(apiKey);
-    }
   };
 
   @Override
@@ -158,9 +152,6 @@ public class VpnTunnelService extends VpnService {
     }
     String errorReportingApiKey =
         intent.getStringExtra(MessageData.ERROR_REPORTING_API_KEY.value);
-    if (errorReportingApiKey != null) {
-      initErrorReporting(errorReportingApiKey);
-    }
     return binder;
   }
 
@@ -569,17 +560,6 @@ public class VpnTunnelService extends VpnService {
     tunnelStore.setTunnelStatus(TunnelStatus.CONNECTED);
     tunnelStore.setIsUdpSupported(isUdpSupported);
   }
-
-  // Error reporting
-
-  private void initErrorReporting(final String apiKey) {
-    try {
-      SentryErrorReporter.init(this, apiKey);
-    } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Failed to initialize Sentry", e);
-    }
-  }
-
   // Foreground service & notifications
 
   /* Starts the service in the foreground and displays a persistent notification. */
