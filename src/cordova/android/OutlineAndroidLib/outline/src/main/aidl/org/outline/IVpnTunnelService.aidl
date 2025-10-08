@@ -60,11 +60,4 @@ interface IVpnTunnelService {
    * @return port TCP port number.
    */
   boolean isServerReachable(String host, int port);
-
-  /**
-   * Initializes the error reporting framework on the VPN service process.
-   *
-   * @param apiKey Sentry API key.
-   */
-  void initErrorReporting(String apiKey);
 }
