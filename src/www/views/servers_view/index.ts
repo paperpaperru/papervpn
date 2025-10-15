@@ -103,6 +103,7 @@ Polymer({
               <div class="subtle">[[localize('server-add-zero-state-instructions')]]</div>
             </paper-button>
           </div>
+<!--
           <template is="dom-if" if="[[!useAltAccessMessage]]">
             <div
               class="footer subtle"
@@ -115,6 +116,7 @@ Polymer({
               inner-h-t-m-l="[[localize('server-create-your-own-zero-state-access', 'breakLine', '<br/>', 'openLink', '<a href=https://s3.amazonaws.com/outline-vpn/get-started/index.html#step-1>', 'openLink2', '<a href=https://www.reddit.com/r/outlinevpn/wiki/index/outline_vpn_access_keys/>', 'closeLink', '</a>')]]"
             ></div>
           </template>
+-->
         </div>
       </template>
       <user-comms-dialog
