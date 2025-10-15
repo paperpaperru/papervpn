@@ -15,7 +15,9 @@ import {html, css, LitElement} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
 // TODO(daniellacosse): fix webpack copy such that we can co-locate this image asset with this folder
-import circle from '../../../assets/circle.png';
+// import circle from '../../../assets/circle.png';
+import connectImg from '../../../assets/status-connected.png';
+import disconnectImg from '../../../assets/status-disconnected.png';
 
 export const SERVER_CONNECTION_INDICATOR_DURATION_MS = 1750;
 export const SERVER_CONNECTION_INDICATOR_DELAY_MS = 500;
@@ -36,6 +38,12 @@ export class ServerConnectionIndicator extends LitElement {
 
   @state() private animationState: ServerConnectionState = ServerConnectionState.DISCONNECTED;
   private animationStartMS: number;
+  private isPlayingVideo: boolean;
+  private isPlayingReverseVideo: boolean;
+  private videoElement: HTMLVideoElement;
+  private connectedImg: HTMLImageElement;
+  private diconnectedImg: HTMLImageElement;
+  private reverseVideoElement: HTMLVideoElement;
 
   static styles = [
     css`
@@ -92,6 +100,30 @@ export class ServerConnectionIndicator extends LitElement {
         these are not applied to circle-large so that 
         that image can drive the implicit width 
       */
+      .v-cont,
+      .video-container {
+        display: none;
+        height: 100%;
+      }
+
+      .im-con-cont,
+      .connected-state {
+        display: none;
+        height: 100%;
+      }
+
+      .im-disc-cont,
+      .disconnected-state {
+        display: inline-block;
+        height: 100%;
+      }
+
+      .rv-cont,
+      .reverse-video-container {
+        display: none;
+        height: 100%;
+      }
+
       .circle-medium,
       .circle-small {
         left: 0;
@@ -151,48 +183,88 @@ export class ServerConnectionIndicator extends LitElement {
   ];
 
   willUpdate(changedProperties: Map<keyof ServerConnectionIndicator, ServerConnectionState>) {
+    const videoContainer = this.shadowRoot.getElementById('v-cont');
+    this.videoElement = <HTMLVideoElement>this.shadowRoot.getElementById('video');
+    const connectedImgContainer = this.shadowRoot.getElementById('im-con-cont');
+    const disconnectedImgContainer = this.shadowRoot.getElementById('im-disc-cont');
+    const reverseVideoContainer = this.shadowRoot.getElementById('rv-cont');
+    this.reverseVideoElement = <HTMLVideoElement>this.shadowRoot.getElementById('reverse-video');
+    if (this.videoElement === null) {
+      return;
+    }
     if (!changedProperties.has('connectionState')) {
       return;
     }
+    console.log('Before if', this.connectionState);
 
-    if (this.isAnimationState(this.connectionState)) {
-      // start the animation and the animation timer
-      this.animationStartMS = Date.now();
-
-      this.animationState = this.connectionState;
-    } else if (this.isAnimationState(this.animationState)) {
-      // schedule the end of the animation
-      // based on when the animation loop started
-      const elapsedAnimationMS = Date.now() - this.animationStartMS;
-
-      // While the animation is reversed, the animation delay
-      // is included in the total play time.
-      const animationDurationMS =
-        this.animationState === ServerConnectionState.DISCONNECTING
-          ? SERVER_CONNECTION_INDICATOR_DURATION_MS + SERVER_CONNECTION_INDICATOR_DELAY_MS
-          : SERVER_CONNECTION_INDICATOR_DURATION_MS;
-
-      const remainingAnimationMS = animationDurationMS - (elapsedAnimationMS % animationDurationMS);
-
-      setTimeout(() => (this.animationState = this.connectionState), remainingAnimationMS);
+    if (this.connectionState == ServerConnectionState.CONNECTING && !this.isPlayingVideo) {
+      this.isPlayingVideo = true;
+      videoContainer.style.display = 'inline-block';
+      connectedImgContainer.style.display = 'none';
+      disconnectedImgContainer.style.display = 'none';
+      reverseVideoContainer.style.display = 'none';
+      this.videoElement.play();
+    } else if (this.connectionState === ServerConnectionState.CONNECTED) {
+      this.isPlayingVideo = false;
+      videoContainer.style.display = 'none';
+      connectedImgContainer.style.display = 'inline-block';
+      disconnectedImgContainer.style.display = 'none';
+      reverseVideoContainer.style.display = 'none';
+      this.videoElement.pause();
+    } else if (this.connectionState === ServerConnectionState.DISCONNECTING) {
+      this.isPlayingReverseVideo = true;
+      this.isPlayingVideo = false;
+      videoContainer.style.display = 'none';
+      connectedImgContainer.style.display = 'none';
+      disconnectedImgContainer.style.display = 'none';
+      reverseVideoContainer.style.display = 'inline-block';
+      this.videoElement.pause();
+      this.reverseVideoElement.play();
+    } else if (this.connectionState === ServerConnectionState.DISCONNECTED) {
+      this.isPlayingReverseVideo = false;
+      this.isPlayingVideo = false;
+      videoContainer.style.display = 'none';
+      connectedImgContainer.style.display = 'none';
+      disconnectedImgContainer.style.display = 'inline-block';
+      reverseVideoContainer.style.display = 'none';
+      this.reverseVideoElement.pause();
+    } else if (this.connectionState == ServerConnectionState.RECONNECTING) {
+      this.isPlayingVideo = true;
+      videoContainer.style.display = 'inline-block';
+      connectedImgContainer.style.display = 'none';
+      disconnectedImgContainer.style.display = 'none';
+      reverseVideoContainer.style.display = 'none';
+      this.videoElement.play();
     } else {
-      this.animationState = this.connectionState;
+      this.isPlayingVideo = false;
+      this.isPlayingReverseVideo = false;
+      videoContainer.style.display = 'none';
+      connectedImgContainer.style.display = 'none';
+      disconnectedImgContainer.style.display = 'inline-block';
+      reverseVideoContainer.style.display = 'none';
+      this.videoElement.pause();
+      this.reverseVideoElement.pause();
     }
   }
 
   render() {
     return html`
-      ${CIRCLE_SIZES.map(
-        circleSize =>
-          html`
-            <img
-              class="circle circle-${circleSize} circle-${this.animationState}"
-              src="${circle}"
-              height="100%"
-              draggable="false"
-            />
-          `
-      )}
+      <div id="v-cont" class="video-container">
+        <video id="video" loop="loop" height="100%" poster="${disconnectImg}" playsinline >
+          <source src="./assets/animation_VPN_outline.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div id="im-con-cont" class="connected-state">
+        <img id="connected-img" src="${connectImg}" height="100%" alt="Unable to place connected-img" />
+      </div>
+      <div id="im-disc-cont" class="disconnected-state">
+        <img id="disconnected-img" src="${disconnectImg}" height="100%" alt="Unable to place disconnected-img" />
+      </div>
+      <div id="rv-cont" class="reverse-video-container">
+        <video id="reverse-video" loop="loop" height="100%" poster="${connectImg}" playsinline>
+          <source src="./assets/reverse_animation.mp4" type="video/mp4" />
+        </video>
+      </div>
     `;
   }
 

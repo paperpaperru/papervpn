@@ -28,6 +28,8 @@
 
   --outline-primary: hsl(170, 60%, 46%);
   --outline-error: hsl(4, 90%, 58%);
+  --main-green: #aeff58;
+  --href-green: #78e801;
 
   --outline-black: hsl(0, 0%, 0%);
   --outline-off-black: hsl(0, 0%, 15%);
@@ -54,7 +56,7 @@
   --outline-elevation: rgb(0 0 0 / 30%) 0px 2px 3px 2px;
 
   --mdc-typography-font-family: var(--outline-font-family);
-  --mdc-theme-primary: var(--outline-primary);
+  --mdc-theme-primary: var(--outline-black);
 }
 
 /* TODO(daniellacosse): enable this when everything has been color scheme'd */
