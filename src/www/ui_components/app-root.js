@@ -395,7 +395,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
               [[localize('about-page-title')]]
             </paper-item>
             <paper-item name="help">
-              <a href="https://papervpn.net" id="helpAnchor" hidden=""></a>
+              <a href="[[helpUrl]]" id="helpAnchor" hidden=""></a>
               <img src$="[[rootPath]]assets/icons/help.png" alt="help"  />
               [[localize('help-page-title')]]
             </paper-item>
@@ -613,6 +613,11 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         readonly: true,
         value: true,
       },
+      helpUrl: {
+        type: String,
+        readonly: true,
+        value: 'https://papervpn.net',
+      },
     };
   }
 
@@ -828,7 +833,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
     } else {
       // macOS does not respond to window.open and Windows opens a new browser window.
       // Simulate a click on the help anchor.
-      this.$.helpAnchor.click();
+      window.open(this.helpUrl, '_blank');
     }
   }
 
