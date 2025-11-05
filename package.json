@@ -13,7 +13,7 @@
     "reset": "npm run clean && npm ci"
   },
   "engines": {
-    "node": "18.x.x"
+    "node": "20.x.x"
   },
   "private": true,
   "workspaces": [
