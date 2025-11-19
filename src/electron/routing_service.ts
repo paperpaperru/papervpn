@@ -21,7 +21,7 @@ import * as fsextra from 'fs-extra';
 import * as sudo from 'sudo-prompt';
 
 import {pathToEmbeddedOutlineService} from '../../client/infrastructure/electron/app_paths';
-import {TunnelStatus} from '../../client/src/www/app/tunnel';
+import {ShadowsocksSessionConfig, TunnelStatus, XraySessionConfig} from '../../client/src/www/app/tunnel';
 import {ErrorCode, SystemConfigurationException} from '../../client/src/www/model/errors';
 
 const isLinux = platform() === 'linux';
@@ -30,7 +30,7 @@ const SERVICE_NAME = isWindows ? '\\\\.\\pipe\\OutlineServicePipe' : '/var/run/o
 
 interface RoutingServiceRequest {
   action: string;
-  parameters: {[parameter: string]: string | boolean};
+  parameters: {[parameter: string]: string | boolean | string[]};
 }
 
 interface RoutingServiceResponse {
@@ -79,7 +79,46 @@ export class RoutingDaemon {
 
   private networkChangeListener?: (status: TunnelStatus) => void;
 
-  constructor(private proxyAddress: string, private isAutoConnect: boolean) {}
+  private proxyAddresses: string[];
+
+  constructor(
+    private config: ShadowsocksSessionConfig | XraySessionConfig,
+    private isAutoConnect: boolean
+  ) {
+    this.proxyAddresses = this.getProxyAddresses(config);
+  }
+
+  private getProxyAddresses(config: ShadowsocksSessionConfig | XraySessionConfig): string[] {
+    const addresses: string[] = [];
+
+    if ('xrayConfig' in config && config.xrayConfig) {
+      try {
+        const xrayConfig = JSON.parse(config.xrayConfig as string);
+        if (xrayConfig.outbounds && Array.isArray(xrayConfig.outbounds)) {
+          for (const outbound of xrayConfig.outbounds) {
+            if (outbound.settings?.vnext && Array.isArray(outbound.settings.vnext)) {
+              for (const vnext of outbound.settings.vnext) {
+                if (vnext.address) {
+                  addresses.push(vnext.address);
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse xrayConfig:', e);
+      }
+
+    
+      if (addresses.length === 0 && config.host) {
+        addresses.push(config.host);
+      }
+    } else if (config.host) {
+      addresses.push(config.host);
+    }
+
+    return addresses;
+  }
 
   // Fulfills once a connection is established with the routing daemon *and* it has successfully
   // configured the system's routing table.
@@ -128,7 +167,11 @@ export class RoutingDaemon {
         newSocket.write(
           JSON.stringify({
             action: RoutingServiceAction.CONFIGURE_ROUTING,
-            parameters: {proxyIp: this.proxyAddress, isAutoConnect: this.isAutoConnect},
+            parameters: {
+              proxyIp: this.proxyAddresses[0] || '',
+              proxyIps: this.proxyAddresses,
+              isAutoConnect: this.isAutoConnect
+            },
           } as RoutingServiceRequest)
         );
       }));

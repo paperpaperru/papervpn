@@ -44,14 +44,14 @@ namespace OutlineService
                 switch (args[0])
                 {
                     case "on":
-                        service.ConfigureRouting(args[1], false);
+                        service.ConfigureRouting(new string[] { args[1] }, false);
                         break;
                     case "off":
-                        if (args.Length < 3)
+                        if (args.Length < 2)
                         {
                             ShowUsageAndExit();
                         }
-                        service.ResetRouting(args[1], Int32.Parse(args[2]));
+                        service.ResetRouting(Int32.Parse(args[1]));
                         break;
                     default:
                         ShowUsageAndExit();
@@ -63,7 +63,7 @@ namespace OutlineService
 
         static void ShowUsageAndExit()
         {
-            Console.WriteLine("usage: on <proxy server ip>|off <proxy server ip> <default gateway interface index>");
+            Console.WriteLine("usage: on <proxy server ip>|off <default gateway interface index>");
             Environment.Exit(1);
         }
     }
