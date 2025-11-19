@@ -13,7 +13,7 @@ export async function main(srcDirs, destDir) {
 
         const stat = await fs.stat(srcFile);
 
-        if (stat.isFile() && !file.endsWith('README.md')) {
+        if (stat.isFile() && !file.endsWith('README.md') && !file.endsWith('.pdb')) {
           await fs.copyFile(srcFile, destFile);
           console.log(`${srcFile} is copied to ${destFile}`);
         } else if (stat.isDirectory()) {

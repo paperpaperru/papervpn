@@ -303,7 +303,7 @@ function createVpnTunnel(
   isAutoConnect: boolean,
   tunnelType: string
 ): VpnTunnel {
-  const routing = new RoutingDaemon(config.host || '', isAutoConnect);
+  const routing = new RoutingDaemon(config, isAutoConnect);
   const tunnel = new GoVpnTunnel(routing, config, tunnelType);
   routing.onNetworkChange = tunnel.networkChanged.bind(tunnel);
   return tunnel;

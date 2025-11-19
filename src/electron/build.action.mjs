@@ -53,6 +53,7 @@ export async function main(...parameters) {
     );
   }
 
+  await runAction('src/electron/build_outline_service', ...parameters);
   await runAction('src/electron/copy_tools');
   await runAction('client/src/www/build', ...parameters);
   await runAction('client/src/tun2socks/build', ...parameters);

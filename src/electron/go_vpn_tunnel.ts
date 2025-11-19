@@ -324,9 +324,10 @@ class GoTun2socks {
           this.xrayProcess.onStdErr = undefined;
         }
       };
-      this.saveXrayConfigToJsonFile(JSON.stringify(this.config), pathToXrayConfigJson())
+      const configPath = pathToXrayConfigJson();
+      this.saveXrayConfigToJsonFile(JSON.stringify(this.config), configPath);
       try {
-        await this.xrayProcess.launch([]);
+        await this.xrayProcess.launch(['-c', configPath]);
         console.info('xray exited with no errors');
       } catch (e) {
         console.error(`xray terminated due to ${e}`);

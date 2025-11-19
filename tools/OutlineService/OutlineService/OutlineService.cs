@@ -102,7 +102,8 @@ namespace OutlineService
 
         private EventLog eventLog;
         private NamedPipeServerStream pipe;
-        private string proxyIp;
+        private string[] proxyIps;
+        private bool isConnected = false;
         private string gatewayIp;
         private int gatewayInterfaceIndex;
 
@@ -332,10 +333,35 @@ namespace OutlineService
             switch (request.action)
             {
                 case ACTION_CONFIGURE_ROUTING:
-                    ConfigureRouting(request.parameters[PARAM_PROXY_IP], Boolean.Parse(request.parameters[PARAM_AUTO_CONNECT]));
+                    string[] ips = null;
+                    if (request.parameters.ContainsKey("proxyIps"))
+                    {
+                        try
+                        {
+                            var proxyIpsParam = request.parameters["proxyIps"];
+                            if (proxyIpsParam is Newtonsoft.Json.Linq.JArray)
+                            {
+                                ips = ((Newtonsoft.Json.Linq.JArray)proxyIpsParam).ToObject<string[]>();
+                            }
+                            else if (proxyIpsParam is string)
+                            {
+                                ips = JsonConvert.DeserializeObject<string[]>((string)proxyIpsParam);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            eventLog.WriteEntry($"Failed to parse proxyIps: {e.Message}", EventLogEntryType.Warning);
+                        }
+                    }
+                    if (ips == null || ips.Length == 0)
+                    {
+                        ips = new string[] { request.parameters[PARAM_PROXY_IP].ToString() };
+                    }
+                    
+                    ConfigureRouting(ips, Boolean.Parse(request.parameters[PARAM_AUTO_CONNECT].ToString()));
                     break;
                 case ACTION_RESET_ROUTING:
-                    ResetRouting(proxyIp, gatewayInterfaceIndex);
+                    ResetRouting(gatewayInterfaceIndex);
                     break;
                 default:
                     eventLog.WriteEntry($"Received invalid request: {request.action}", EventLogEntryType.Error);
@@ -390,8 +416,10 @@ namespace OutlineService
         // TODO: The client needs to handle certain autoconnect failures better,
         //       e.g. if IPv4 redirect fails then the client is not really in
         //       the reconnecting state; the system is leaking traffic.
-        public void ConfigureRouting(string proxyIp, bool isAutoConnect)
+        public void ConfigureRouting(string[] proxyIpsParam, bool isAutoConnect)
         {
+            this.proxyIps = proxyIpsParam;
+            eventLog.WriteEntry($"Received {proxyIps.Length} proxy IP(s): {string.Join(", ", proxyIps)}");
             try
             {
                 StartSmartDnsBlock();
@@ -404,21 +432,24 @@ namespace OutlineService
 
             try
             {
-                GetSystemIpv4Gateway(proxyIp);
+                GetSystemIpv4Gateway();
 
                 eventLog.WriteEntry($"connecting via gateway at {gatewayIp} on interface {gatewayInterfaceIndex}");
 
-                // Set the proxy escape route first to prevent a routing loop when capturing all IPv4 traffic.
                 try
                 {
-                    AddOrUpdateProxyRoute(proxyIp, gatewayIp, gatewayInterfaceIndex);
-                    eventLog.WriteEntry($"created route to proxy");
+                    foreach (string proxy in proxyIps)
+                    {
+                        AddOrUpdateProxyRoute(proxy, gatewayIp, gatewayInterfaceIndex);
+                        eventLog.WriteEntry($"created route to {proxy}.");
+                    }
+                    eventLog.WriteEntry($"created routes to all {proxyIps.Length} proxies");
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"could not create route to proxy: {e.Message}");
+                    throw new Exception($"could not create routes to proxies: {e.Message}");
                 }
-                this.proxyIp = proxyIp;
+                this.isConnected = true;
 
                 try
                 {
@@ -473,7 +504,7 @@ namespace OutlineService
         //    function is called while Outline is not connected. This route is
         //    mostly harmless because it only affects traffic to the proxy and
         //    if/when the user reconnects to it the route will be updated.
-        public void ResetRouting(string proxyIp, int gatewayInterfaceIndex)
+        public void ResetRouting(int gatewayInterfaceIndex)
         {
             try
             {
@@ -502,18 +533,21 @@ namespace OutlineService
                 eventLog.WriteEntry($"failed to unblock IPv6: {e.Message}", EventLogEntryType.Error);
             }
 
-            if (proxyIp != null)
+            if (isConnected)
             {
                 try
                 {
-                    DeleteProxyRoute(proxyIp);
-                    eventLog.WriteEntry($"deleted route to proxy");
+                    foreach (string proxy in proxyIps)
+                    {
+                        DeleteProxyRoute(proxy);
+                    }
+                    eventLog.WriteEntry($"deleted routes to all {proxyIps.Length} proxies");
                 }
                 catch (Exception e)
                 {
-                    eventLog.WriteEntry($"failed to delete route to proxy: {e.Message}", EventLogEntryType.Error);
+                    eventLog.WriteEntry($"failed to delete routes to proxies: {e.Message}", EventLogEntryType.Error);
                 }
-                this.proxyIp = null;
+                this.isConnected = false;
             }
 
             try
@@ -811,7 +845,7 @@ namespace OutlineService
         // API illustrate how we could more closely match GetBestRoute:
         // - https://github.com/wine-mirror/wine/blob/master/dlls/iphlpapi/iphlpapi_main.c
         // - https://github.com/reactos/reactos/blob/master/dll/win32/iphlpapi/iphlpapi_main.c
-        private void GetSystemIpv4Gateway(string proxyIp)
+        private void GetSystemIpv4Gateway()
         {
             gatewayIp = null;
             gatewayInterfaceIndex = -1;
@@ -915,7 +949,7 @@ namespace OutlineService
         //    think Outline is connected.
         private void NetworkAddressChanged(object sender, EventArgs evt)
         {
-            if (proxyIp == null)
+            if (!isConnected)
             {
                 eventLog.WriteEntry("network changed but Outline is not connected - doing nothing");
                 return;
@@ -926,7 +960,7 @@ namespace OutlineService
 
             try
             {
-                GetSystemIpv4Gateway(proxyIp);
+                GetSystemIpv4Gateway();
             }
             catch (Exception e)
             {
@@ -962,15 +996,17 @@ namespace OutlineService
 
             eventLog.WriteEntry($"network changed - gateway is now {gatewayIp} on interface {gatewayInterfaceIndex}");
 
-            // Add the proxy escape route before capturing IPv4 traffic to prevent a routing loop in the TAP device.
             try
             {
-                AddOrUpdateProxyRoute(proxyIp, gatewayIp, gatewayInterfaceIndex);
-                eventLog.WriteEntry($"updated route to proxy");
+                foreach (string proxy in proxyIps)
+                {
+                    AddOrUpdateProxyRoute(proxy, gatewayIp, gatewayInterfaceIndex);
+                }
+                eventLog.WriteEntry($"updated routes to all {proxyIps.Length} proxies");
             }
             catch (Exception e)
             {
-                eventLog.WriteEntry($"could not update route to proxy: {e.Message}");
+                eventLog.WriteEntry($"could not update routes to proxies: {e.Message}");
                 return;
             }
 
@@ -1062,7 +1098,7 @@ namespace OutlineService
         [DataMember]
         internal string action;
         [DataMember]
-        internal Dictionary<string, string> parameters;
+        internal Dictionary<string, object> parameters;
     }
 
     [DataContract]
