@@ -497,7 +497,8 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
     DDLogInfo(@"Starting xray %@", [self.tunnelConfig encode]);
     NSString* s = XrayMobileStartXrayServer(
                                             [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/"],
-                                            self.tunnelConfig.xrayConfig);
+                                            self.tunnelConfig.xrayConfig,
+                                            50*1000*1000);
     DDLogInfo(@"Xray started %@", s);
     self.tunnel = XrayMobileConnectLocalSocksTunnel(weakSelf, 12080, &err);
   } else {

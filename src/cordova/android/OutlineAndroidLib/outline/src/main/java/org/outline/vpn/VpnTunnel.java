@@ -155,7 +155,7 @@ public class VpnTunnel {
 
     LOG.fine("Starting Xray...");
     String s = XrayMobile.startXrayServer(
-            this.vpnService.getFilesDir().getAbsolutePath(), config);
+            this.vpnService.getFilesDir().getAbsolutePath(), config, 50*1000*1000);
     LOG.info(String.format("XrayMobile.startXrayServer %s", s));
     LOG.fine("Starting local tun2socks...");
     tunnel = XrayMobile.connectLocalSocksTunnel(tunFd.getFd(), 12080);
