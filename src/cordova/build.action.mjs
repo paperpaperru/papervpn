@@ -33,8 +33,6 @@ import {downloadHttpsFile} from '../build/download_file.mjs';
 export async function main(...parameters) {
   const {platform, buildMode, verbose} = getBuildParameters(parameters);
 
-  await runAction('www/build', ...parameters);
-  await runAction('tun2socks/build', ...parameters);
   await runAction('cordova/setup', ...parameters);
 
   if (verbose) {
