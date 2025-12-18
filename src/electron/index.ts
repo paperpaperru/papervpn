@@ -114,7 +114,7 @@ function setupTray(): void {
   tray.on('click', () => {
     mainWindow?.show();
   });
-  tray.setToolTip('Paper VPN');
+  tray.setToolTip('Paper VPN Lite');
   updateTray(TunnelStatus.DISCONNECTED);
 }
 

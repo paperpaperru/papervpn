@@ -1,6 +1,6 @@
 {
   "name": "papervpn-client",
-  "productName": "Paper VPN",
+  "productName": "Paper VPN Lite",
   "scripts": {
     "action:help": "npm run action list",
     "action:list": "npm run action list",

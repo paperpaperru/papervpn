@@ -1,7 +1,7 @@
 {
   "files": ["build/electron", "client/www", "client/resources/tray", "!node_modules/electron"],
   "asarUnpack": ["client"],
-  "artifactName": "PaperVPN-Client.${ext}",
+  "artifactName": "PaperVPNLite-Client.${ext}",
   "directories": {
     "output": "output/build/dist"
   },

@@ -232,7 +232,7 @@ export class RoutingDaemon {
  */
 function executeCommandAsRoot(command: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    sudo.exec(command, {name: 'Paper VPN'}, (sudoError, stdout, stderr) => {
+    sudo.exec(command, {name: 'Paper VPN Lite'}, (sudoError, stdout, stderr) => {
       console.info(stdout);
       console.error(stderr);
 
