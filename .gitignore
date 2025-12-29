@@ -29,3 +29,5 @@ tools/smartdnsblock/bin/*
 !tools/smartdnsblock/bin/*.exe
 universal.apk
 xcuserdata/
+geoip.dat
+geosite.dat

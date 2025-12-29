@@ -30,6 +30,10 @@ import android.net.NetworkRequest;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.IBinder;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -144,6 +148,40 @@ public class VpnTunnelService extends VpnService {
     vpnTunnel = new VpnTunnel(this);
     networkConnectivityMonitor = new NetworkConnectivityMonitor();
     tunnelStore = new VpnTunnelStore(VpnTunnelService.this);
+    copyGeoFilesFromAssets();
+  }
+
+  private void copyGeoFilesFromAssets() {
+    final String[] geoFiles = {"geoip.dat", "geosite.dat"};
+    final File filesDir = getFilesDir();
+    
+    for (String fileName : geoFiles) {
+      File targetFile = new File(filesDir, fileName);
+      
+      if (targetFile.exists()) {
+        LOG.info(String.format("Geo file %s already exists, skipping copy", fileName));
+        continue;
+      }
+      
+      try {
+        InputStream inputStream = getAssets().open(fileName);
+        FileOutputStream outputStream = new FileOutputStream(targetFile);
+        
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = inputStream.read(buffer)) > 0) {
+          outputStream.write(buffer, 0, length);
+        }
+        
+        inputStream.close();
+        outputStream.flush();
+        outputStream.close();
+        
+        LOG.info(String.format("Copied %s from assets to %s", fileName, targetFile.getAbsolutePath()));
+      } catch (IOException e) {
+        LOG.log(Level.WARNING, String.format("Failed to copy %s from assets", fileName), e);
+      }
+    }
   }
 
   @Override

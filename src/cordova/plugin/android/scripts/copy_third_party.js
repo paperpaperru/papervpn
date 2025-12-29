@@ -20,6 +20,7 @@ const path = require('node:path');
 
 const ANDROID_LIBS_FOLDER_PATH = path.join('plugins', 'cordova-plugin-outline', 'android', 'libs');
 const TUN2SOCKS_ANDROID_FOLDER_PATH = path.join('output', 'build', 'android');
+const ANDROID_ASSETS_FOLDER_PATH = path.join('src', 'cordova', 'android', 'OutlineAndroidLib', 'outline', 'src', 'main', 'assets');
 
 module.exports = async function () {
   console.log('Copying Android third party libraries...');
@@ -27,5 +28,16 @@ module.exports = async function () {
   await fs.copyFile(
     path.join(TUN2SOCKS_ANDROID_FOLDER_PATH, 'tun2socks.aar'),
     path.join(ANDROID_LIBS_FOLDER_PATH, 'tun2socks.aar')
+  );
+  
+  console.log('Copying geo files to assets...');
+  await fs.mkdir(ANDROID_ASSETS_FOLDER_PATH, {recursive: true});
+  await fs.copyFile(
+    path.join(TUN2SOCKS_ANDROID_FOLDER_PATH, 'geo', 'geoip.dat'),
+    path.join(ANDROID_ASSETS_FOLDER_PATH, 'geoip.dat')
+  );
+  await fs.copyFile(
+    path.join(TUN2SOCKS_ANDROID_FOLDER_PATH, 'geo', 'geosite.dat'),
+    path.join(ANDROID_ASSETS_FOLDER_PATH, 'geosite.dat')
   );
 };

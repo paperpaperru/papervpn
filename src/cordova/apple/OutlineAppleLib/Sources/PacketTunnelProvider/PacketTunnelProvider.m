@@ -67,7 +67,41 @@ NSString *const kDefaultPathKey = @"defaultPath";
 
   _packetQueue = dispatch_queue_create("org.outline.ios.packetqueue", DISPATCH_QUEUE_SERIAL);
 
+  [self copyGeoFilesFromBundleToSharedContainer:containerUrl];
+
   return self;
+}
+
+- (void)copyGeoFilesFromBundleToSharedContainer:(NSURL *)containerUrl {
+  NSArray *geoFiles = @[@"geoip.dat", @"geosite.dat"];
+  NSFileManager *fileManager = [NSFileManager defaultManager];
+  
+  for (NSString *fileName in geoFiles) {
+    NSURL *targetURL = [containerUrl URLByAppendingPathComponent:fileName];
+    
+    if ([fileManager fileExistsAtPath:[targetURL path]]) {
+      DDLogDebug(@"Geo file %@ already exists, skipping copy", fileName);
+      continue;
+    }
+    
+    NSBundle *bundle = [NSBundle bundleForClass:[self class]];
+    NSURL *sourceURL = [bundle URLForResource:[fileName stringByDeletingPathExtension]
+                                 withExtension:[fileName pathExtension]];
+    
+    if (sourceURL == nil) {
+      DDLogWarn(@"Geo file %@ not found in bundle", fileName);
+      continue;
+    }
+    
+    NSError *error = nil;
+    BOOL success = [fileManager copyItemAtURL:sourceURL toURL:targetURL error:&error];
+    
+    if (success) {
+      DDLogInfo(@"Copied %@ from bundle to shared container: %@", fileName, [targetURL path]);
+    } else {
+      DDLogError(@"Failed to copy %@ from bundle: %@", fileName, error.localizedDescription);
+    }
+  }
 }
 
 - (void)startTunnelWithOptions:(NSDictionary *)options
@@ -495,8 +529,37 @@ bool getIpAddressString(const struct sockaddr *sa, char *s, socklen_t maxbytes) 
     self.tunnel = Tun2socksConnectShadowsocksTunnel(weakSelf, client, isUdpSupported, &err);
   } else if ([self.tunnelConfig.tunnelType isEqualToString:@"xray"]) {
     DDLogInfo(@"Starting xray %@", [self.tunnelConfig encode]);
+    
+    NSString *documentsPath = [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/"];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    NSString *geoipPath = [documentsPath stringByAppendingPathComponent:@"geoip.dat"];
+    NSString *geositePath = [documentsPath stringByAppendingPathComponent:@"geosite.dat"];
+    
+    BOOL geoipExists = [fileManager fileExistsAtPath:geoipPath];
+    BOOL geositeExists = [fileManager fileExistsAtPath:geositePath];
+    
+    DDLogInfo(@"Geo files check - geoip.dat: %@, geosite.dat: %@", 
+              geoipExists ? @"EXISTS" : @"MISSING",
+              geositeExists ? @"EXISTS" : @"MISSING");
+    
+    if (!geoipExists || !geositeExists) {
+      DDLogWarn(@"Geo files missing! Attempting to copy from bundle...");
+      [self copyGeoFilesFromBundleToSharedContainer:nil];
+      
+      geoipExists = [fileManager fileExistsAtPath:geoipPath];
+      geositeExists = [fileManager fileExistsAtPath:geositePath];
+      
+      if (!geoipExists || !geositeExists) {
+        DDLogError(@"Failed to copy geo files. Xray may not work correctly.");
+        DDLogError(@"geoip.dat exists: %@, geosite.dat exists: %@", 
+                   geoipExists ? @"YES" : @"NO",
+                   geositeExists ? @"YES" : @"NO");
+      }
+    }
+    
     NSString* s = XrayMobileStartXrayServer(
-                                            [NSString stringWithFormat:@"%@/%@", NSHomeDirectory(), @"Documents/"],
+                                            documentsPath,
                                             self.tunnelConfig.xrayConfig,
                                             50*1000*1000);
     DDLogInfo(@"Xray started %@", s);
