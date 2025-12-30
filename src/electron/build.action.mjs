@@ -55,6 +55,8 @@ export async function main(...parameters) {
 
   await runAction('src/electron/build_outline_service', ...parameters);
   await runAction('src/electron/copy_tools');
+  // Get geo files
+  await runAction('src/build/download_geo_files', ...parameters);
   await runAction('client/src/www/build', ...parameters);
   await runAction('client/src/tun2socks/build', ...parameters);
   await runAction('src/electron/build_main', ...parameters);
